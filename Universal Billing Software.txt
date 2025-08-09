@@ -1,0 +1,117 @@
+﻿Functional Requirements Document (FRD)
+Project Name: Universal Billing Software (Tile Showroom + Multi-domain Compatibility)
+Version: 1.0 
+Prepared By: [Srikant Panigrahy, Nexus Infotech] Date: [08/07/2025]
+
+1. Project Overview
+This billing software is designed for tile showrooms but with scalable architecture to support multiple business domains including garments, electronics, hardware, and more. The system will manage invoicing, purchase, inventory, customer relations, and GST-compliant taxation.
+
+2. Modules & Features
+2.1 User Management
+* Role-Based Access Control (Admin, Cashier, Manager, Salesperson)
+* User Creation & Login Management
+* Login History Tracking
+2.2 Master Data Management
+2.2.1 Product Master
+* Product Code, Name, Brand, Category
+* Units (pcs, sqft, boxes, kg, etc.)
+* HSN Code & GST %
+* Rate Management (Retail/Wholesale/Dealer)
+* Minimum Stock Level
+2.2.2 Customer Master
+* Customer Name, Address, Phone, Email
+* GSTIN, State Code
+* Price Category
+* Credit Limit
+2.2.3 Supplier Master
+* Supplier Name, Address, Phone, Email
+* GSTIN
+2.2.4 Tax Master
+* HSN Code Setup
+* GST % Slabs
+
+2.3 Purchase Management
+* Purchase Order Creation (Optional)
+* Purchase Invoice Entry
+o Vendor Selection
+o Date, Invoice No, Items, Quantity, Rates
+o GST Calculations (CGST/SGST/IGST)
+o Freight & Additional Charges
+o Auto Stock Update
+* Purchase Return
+o Reference Purchase Invoice
+o Return Reason & Adjustment
+
+2.4 Sales Management
+* Quotation Creation
+* Sales Invoice Generation
+o Customer Selection (Cash/Walk-in/Credit) or create instant customer with customer name, mobile no, address(optional)
+o Product Addition with quantity, price, discounts in percentage or value
+o Auto GST Calculation
+o Invoice Print (Thermal or A4)
+o E-Invoice and QR Code (optional)
+* Sales Return
+o Original Invoice Reference or without invoice
+o Return Reason
+o Refund/Credit Note Generation
+
+2.5 Inventory Management
+* Stock Ledger
+o Inward (Purchase/Return In)
+o Outward (Sales/Return Out)
+* Stock Adjustment (Manual)
+* Reorder Level Alerts
+* Multi-location Warehouse Support (optional)
+
+2.6 Taxation & Compliance (2nd phase)
+* HSN Summary Reports
+* GST Output/Input Summary
+* GSTR-1, GSTR-3B Ready Reports (CSV/JSON)
+* Invoice Numbering as per GST Guidelines
+
+2.7 Accounts & Ledger(2nd phase)
+* Customer Ledger
+* Supplier Ledger
+* Receipts & Payments Entry
+* Daily Cash Book
+* Expense Entry (Office, Admin, Utilities)
+* Bank Transactions (Cheque/Transfer/UPI)
+
+2.8 Reporting Module
+* Sales Report (Date-wise, Product-wise, User-wise)
+* Purchase Report
+* Customer Outstanding Report
+* Day-End Summary Report
+* Stock Valuation Report
+
+2.9 Invoice & Document Configuration
+* Invoice Format Setup
+o A4 & POS
+o Company Logo, GSTIN, Terms & Conditions
+o Optional QR Code
+* Quotation & Delivery Challan Templates
+
+2.10 Special Modules (For Tile Showroom)
+* Area Calculator (Length x Width = Sqft)
+* Box-to-Sqft Converter
+* Wastage Percentage Estimator
+* Product Sample Gallery (optional)
+
+3. Non-Functional Requirements
+* Scalable Architecture
+* Cloud & On-Premise Deployment Support
+* Secure Login & Data Encryption
+* Regular Data Backup
+* Responsive Design for Tablet/Desktop Use
+
+4. Future Scope
+* Mobile App for Salesperson
+* Online Order Sync (e-commerce integration)
+* Loyalty & Reward System
+* Barcode & RFID Integration
+
+5. Assumptions
+* The software will support multiple GST rates as per Indian tax laws.
+* Client will provide necessary branding assets (logo, company details).
+* User training will be provided after implementation.
+
