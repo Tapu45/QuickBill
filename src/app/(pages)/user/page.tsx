@@ -1,4 +1,5 @@
 "use client";
+import { Suspense } from "react";
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
@@ -7,6 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export default function AddUserPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AddUserPageContent />
+    </Suspense>
+  );
+}
+
+function AddUserPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const organizationId = searchParams.get("organizationId") || ""; // Pass org id via query param
