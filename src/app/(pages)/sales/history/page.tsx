@@ -16,10 +16,16 @@ export default function SalesHistoryPage() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
-  const handlePrintTable = printSalesTable;
-  const handlePrintModal = () => {
-    if (selectedSale)
-      printSaleDetails(selectedSale.id, selectedSale.invoiceNumber);
+  const handlePrintTable = async () => {
+    if (typeof window === "undefined") return;
+    const { printSalesTable } = await import("@/utils/print");
+    printSalesTable();
+  };
+  
+  const handlePrintModal = async () => {
+    if (typeof window === "undefined" || !selectedSale) return;
+    const { printSaleDetails } = await import("@/utils/print");
+    printSaleDetails(selectedSale.id, selectedSale.invoiceNumber);
   };
 
  useEffect(() => {
