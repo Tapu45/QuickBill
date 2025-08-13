@@ -77,7 +77,7 @@ export default function AddUserPage() {
   };
 
   const handleSkip = () => {
-    router.push("/dashboard"); // Or wherever you want to redirect
+    router.push("/sales"); // Or wherever you want to redirect
   };
 
   return (

@@ -28,8 +28,13 @@ export async function POST(req: Request) {
                 status,
                 notes,
                 items,
-                createdById
+                createdById,
+                storeId
             } = body;
+
+            if (!storeId) {
+                return NextResponse.json({ error: "storeId is required" }, { status: 400 });
+            }
 
             const purchase = await prisma.purchase.create({
                 data: {
@@ -48,6 +53,7 @@ export async function POST(req: Request) {
                     status,
                     notes,
                     createdById,
+                    storeId,
                     items: {
                         create: items.map((item: any) => ({
                             productId: item.productId,
@@ -64,7 +70,7 @@ export async function POST(req: Request) {
                 }
             });
 
-           
+
 
             return NextResponse.json(purchase);
         }
@@ -113,7 +119,8 @@ export async function POST(req: Request) {
                         organizationId,
                         productId: item.productId,
                         warehouseId: item.warehouseId || "default",
-                        quantity: item.receivedQuantity
+                        quantity: item.receivedQuantity,
+                        storeId: item.storeId
                     },
                     update: {
                         quantity: {

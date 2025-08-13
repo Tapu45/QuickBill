@@ -121,15 +121,19 @@ export default function PurchasePage() {
       alert("Organization ID not found in localStorage.");
       return;
     }
-     if (!session?.user?.id) {
-    alert("User not authenticated.");
-    return;
-  }
+    if (!session?.user?.id) {
+      alert("User not authenticated.");
+      return;
+    }
     setLoading(true);
     const res = await fetch("/api/purchase", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, organizationId, createdById: session.user.id }),
+      body: JSON.stringify({
+        ...form,
+        organizationId,
+        createdById: session.user.id,
+      }),
     });
     if (res.ok) {
       setForm({
@@ -159,9 +163,49 @@ export default function PurchasePage() {
   return (
     <div className="container mx-auto p-1 space-y-8">
       <div className="bg-card rounded-lg  p-1">
-        <h2 className="text-2xl font-bold text-card-foreground mb-6">
-          Create Purchase Order
-        </h2>
+        {/* Header Section */}
+        <div className="mb-6 flex items-center gap-3">
+          <div
+            className="w-2 h-10 rounded bg-[var(--color-primary)] shadow"
+            aria-hidden="true"
+          />
+          <div className="flex items-center gap-2">
+            {/* Purchase Order Icon */}
+            <svg
+              width="32"
+              height="32"
+              fill="none"
+              viewBox="0 0 24 24"
+              className="text-[var(--color-primary)]"
+            >
+              <rect
+                x="4"
+                y="4"
+                width="16"
+                height="16"
+                rx="3"
+                stroke="currentColor"
+                strokeWidth="2"
+                fill="none"
+              />
+              <path
+                d="M8 9h8M8 13h5"
+                stroke="currentColor"
+                strokeWidth="2"
+                fill="none"
+              />
+            </svg>
+            <h2
+              className="text-3xl font-bold tracking-tight drop-shadow"
+              style={{
+                color: "var(--color-card-foreground)",
+                letterSpacing: "-0.02em",
+              }}
+            >
+              Create Purchase Order
+            </h2>
+          </div>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Basic Information Section */}

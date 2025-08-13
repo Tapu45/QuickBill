@@ -18,7 +18,12 @@ export async function POST(req: NextRequest) {
       notes,
       organizationId,
       items,
+      storeId
     } = data;
+
+    if (!storeId) {
+      return NextResponse.json({ success: false, error: "storeId is required" }, { status: 400 });
+    }
 
     const quotation = await prisma.quotation.create({
       data: {
@@ -32,6 +37,7 @@ export async function POST(req: NextRequest) {
         status,
         notes,
         organizationId,
+        storeId,
         items: {
           create: items.map((item: any) => ({
             productId: item.productId,

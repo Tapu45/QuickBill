@@ -12,6 +12,7 @@ import {
   Users,
   ShoppingBag,
   CreditCard,
+  BarChart2,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -24,19 +25,9 @@ const sidebarLinks = [
     href: "/dashboard",
   },
   {
-    title: "Products",
-    icon: <ShoppingBag className="h-5 w-5" />,
-    href: "/products",
-  },
-  {
-    title: "Customers",
-    icon: <Users className="h-5 w-5" />,
-    href: "/customers",
-  },
-  {
-    title: "Inventory",
-    icon: <Building2 className="h-5 w-5" />,
-    href: "/Inventory-management/view",
+    title: "Sales",
+    icon: <BarChart2 className="h-5 w-5" />,
+    href: "/sales",
   },
   {
     title: "Purchase",
@@ -44,14 +35,30 @@ const sidebarLinks = [
     href: "/purchase",
   },
   {
-    title: "Promote",
-    icon: <BarChart3 className="h-5 w-5" />,
-    href: "/suppliers",
+    title: "Inventory",
+    icon: <Building2 className="h-5 w-5" />,
+    href: "/Inventory-management/view",
   },
-   {
-    title: "Sales",
-    icon: <BarChart3 className="h-5 w-5" />,
-    href: "/sales",
+  {
+    title: "Master",
+    icon: <Users className="h-5 w-5" />,
+    children: [
+      {
+        title: "Products",
+        icon: <ShoppingBag className="h-5 w-5" />,
+        href: "/products",
+      },
+      {
+        title: "Customers",
+        icon: <Users className="h-5 w-5" />,
+        href: "/customers",
+      },
+      {
+        title: "Suppliers",
+        icon: <BarChart3 className="h-5 w-5" />,
+        href: "/suppliers",
+      },
+    ],
   },
 ];
 
@@ -105,7 +112,46 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
       {/* Navigation */}
       <nav className="flex flex-col gap-1 p-4">
         {sidebarLinks.map((link) => {
-          const isActive = pathname.startsWith(link.href);
+          // If link has children, render as a group with hover-to-show
+          if (link.children) {
+            return (
+              <div key={link.title} className="group relative">
+                <div
+                  tabIndex={0}
+                  className="flex items-center gap-3 px-3 py-2.5 font-semibold text-gray-500 dark:text-gray-400 cursor-pointer focus:outline-none"
+                >
+                  {link.icon}
+                  <span>{link.title}</span>
+                </div>
+                <div className="ml-6 flex flex-col gap-1 transition-all max-h-0 overflow-hidden opacity-0 group-hover:max-h-[500px] group-hover:opacity-100 group-focus-within:max-h-[500px] group-focus-within:opacity-100">
+                  {link.children.map((child) => {
+                    const isChildActive = pathname.startsWith(child.href);
+                    return (
+                      <motion.div
+                        key={child.href}
+                        whileHover={{ x: 5 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <Link
+                          href={child.href}
+                          className={`flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors ${
+                            isChildActive
+                              ? "bg-gray-100 dark:bg-zinc-800 text-primary font-medium"
+                              : "hover:bg-gray-50 dark:hover:bg-zinc-800 text-gray-600 dark:text-gray-400"
+                          }`}
+                        >
+                          {child.icon}
+                          <span>{child.title}</span>
+                        </Link>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          }
+          // Render normal link
+          const isActive = link.href ? pathname.startsWith(link.href) : false;
           return (
             <motion.div
               key={link.href}
@@ -138,14 +184,18 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
             </span>
             <ThemeToggle />
           </div>
-          <motion.button
-            whileHover={{ x: 5 }}
-            whileTap={{ scale: 0.95 }}
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 hover:bg-gray-50 dark:hover:bg-zinc-800 text-gray-600 dark:text-gray-400"
-          >
-            <Settings className="h-5 w-5" />
-            <span>Settings</span>
-          </motion.button>
+          {/* Settings Button */}
+          <Link href="/settings" passHref>
+            <motion.button
+              whileHover={{ x: 5 }}
+              whileTap={{ scale: 0.95 }}
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2 hover:bg-gray-50 dark:hover:bg-zinc-800 text-gray-600 dark:text-gray-400"
+              type="button"
+            >
+              <Settings className="h-5 w-5" />
+              <span>Settings</span>
+            </motion.button>
+          </Link>
           <motion.button
             whileHover={{ x: 5 }}
             whileTap={{ scale: 0.95 }}

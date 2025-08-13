@@ -209,7 +209,7 @@ export async function POST(req: NextRequest) {
     switch (action) {
       case 'warehouse-create': {
         // Create a new warehouse
-        const { name, address, organizationId, isDefault } = body;
+        const { name, address, organizationId, isDefault, storeId } = body;
         if (!name || !organizationId) {
           return NextResponse.json({ error: 'Missing name or organizationId' }, { status: 400 });
         }
@@ -220,6 +220,7 @@ export async function POST(req: NextRequest) {
             organizationId,
             isDefault: !!isDefault,
             isActive: true,
+            storeId
           },
         });
         return NextResponse.json(warehouse);
@@ -227,8 +228,8 @@ export async function POST(req: NextRequest) {
 
       case 'inventory-adjust': {
         // Manual stock adjustment
-        const { organizationId, productId, warehouseId, quantity, adjustmentType, reason } = body;
-        if (!organizationId || !productId || !warehouseId || !quantity || !adjustmentType) {
+        const { organizationId, productId, warehouseId, quantity, adjustmentType, reason, storeId } = body;
+        if (!organizationId || !productId || !warehouseId || !quantity || !adjustmentType || !storeId) {
           return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
         // Create StockAdjustment record
@@ -242,6 +243,7 @@ export async function POST(req: NextRequest) {
             adjustmentType,
             quantity,
             reason,
+            storeId
           },
         });
         // Update Inventory
@@ -261,6 +263,7 @@ export async function POST(req: NextRequest) {
             quantity: newQty,
             avgCostPrice: inventory?.avgCostPrice ?? 0,
             lastUpdated: new Date(),
+            storeId
           },
         });
         // Add to StockLedger
@@ -274,6 +277,7 @@ export async function POST(req: NextRequest) {
             referenceId: adjustment.id,
             referenceType: 'StockAdjustment',
             remarks: reason,
+            storeId
           },
         });
         return NextResponse.json(adjustment);
@@ -281,8 +285,8 @@ export async function POST(req: NextRequest) {
 
       case 'stock-transfer': {
         // Transfer stock between warehouses
-        const { organizationId, productId, fromWarehouseId, toWarehouseId, quantity, reason } = body;
-        if (!organizationId || !productId || !fromWarehouseId || !toWarehouseId || !quantity) {
+        const { organizationId, productId, fromWarehouseId, toWarehouseId, quantity, reason, storeId } = body;
+        if (!organizationId || !productId || !fromWarehouseId || !toWarehouseId || !quantity || !storeId) {
           return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
         // Create StockTransfer record
@@ -296,6 +300,7 @@ export async function POST(req: NextRequest) {
             reason,
             status: 'PENDING',
             organizationId,
+            storeId
           },
         });
         // Deduct from source warehouse
@@ -313,6 +318,7 @@ export async function POST(req: NextRequest) {
             quantity: newSourceQty,
             avgCostPrice: sourceInventory?.avgCostPrice ?? 0,
             lastUpdated: new Date(),
+            storeId
           },
         });
         // Add to destination warehouse
@@ -330,6 +336,7 @@ export async function POST(req: NextRequest) {
             quantity: newDestQty,
             avgCostPrice: destInventory?.avgCostPrice ?? sourceInventory?.avgCostPrice ?? 0,
             lastUpdated: new Date(),
+            storeId
           },
         });
         // Add to StockLedger (TRANSFER_OUT and TRANSFER_IN)
@@ -343,6 +350,7 @@ export async function POST(req: NextRequest) {
             referenceId: transfer.id,
             referenceType: 'StockTransfer',
             remarks: reason,
+            storeId
           },
         });
         await prisma.stockLedger.create({
@@ -355,6 +363,7 @@ export async function POST(req: NextRequest) {
             referenceId: transfer.id,
             referenceType: 'StockTransfer',
             remarks: reason,
+            storeId
           },
         });
         return NextResponse.json(transfer);

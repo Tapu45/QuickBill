@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Customer, Product, SaleItem } from "@/types/Sales";
 import { useReactToPrint } from "react-to-print";
+import { useUser } from "@/context/UserContext";
+import Link from "next/link";
 
 function calculateGST(amount: number, gst: number) {
   return (amount * gst) / 100;
@@ -25,7 +27,15 @@ function useDebouncedCallback(
   );
 }
 
+function getOrgId() {
+  if (typeof window !== "undefined") {
+    return localStorage.getItem("organizationId") || "";
+  }
+  return "";
+}
+
 export default function SalesPage() {
+  const user = useUser();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [customerDetails, setCustomerDetails] = useState<Customer | null>(null);
@@ -76,14 +86,31 @@ export default function SalesPage() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const suggestionsRef = useRef<HTMLUListElement>(null);
 
+  
+
+  useEffect(() => {
+    setProductQueries(
+      items.map((item, idx) => {
+        // If productId is set, try to get the name from the current suggestion list for this row
+        if (item.productId) {
+          const suggestion = productSuggestions[idx]?.find(
+            (p) => p.id === item.productId
+          );
+          if (suggestion) return suggestion.name;
+        }
+        return productQueries[idx] || "";
+      })
+    );
+  }, [items, productSuggestions]);
   // Fetch customers
   const fetchCustomerSuggestions = async (query: string) => {
-    if (!query) {
+    const orgId = getOrgId();
+    if (!query || !orgId) {
       setCustomerSuggestions([]);
       return;
     }
     const res = await fetch(
-      `/api/master/customer?organizationId=org-1&search=${encodeURIComponent(
+      `/api/master/customer?organizationId=${orgId}&search=${encodeURIComponent(
         query
       )}`
     );
@@ -92,7 +119,8 @@ export default function SalesPage() {
   };
 
   const fetchProductSuggestions = async (idx: number, query: string) => {
-    if (!query) {
+    const orgId = getOrgId();
+    if (!query || !orgId) {
       setProductSuggestions((prev) => {
         const updated = [...prev];
         updated[idx] = [];
@@ -101,7 +129,7 @@ export default function SalesPage() {
       return;
     }
     const res = await fetch(
-      `/api/master/product?organizationId=org-1&search=${encodeURIComponent(
+      `/api/master/product?organizationId=${orgId}&search=${encodeURIComponent(
         query
       )}`
     );
@@ -147,15 +175,15 @@ export default function SalesPage() {
     }
   };
 
-  useEffect(() => {
-    setProductQueries(
-      items.map(
-        (item, idx) => products.find((p) => p.id === item.productId)?.name || ""
-      )
-    );
-    setProductSuggestions(items.map(() => []));
-    setShowProductSuggestions(items.map(() => false));
-  }, [items, products]);
+  // useEffect(() => {
+  //   setProductQueries(
+  //     items.map(
+  //       (item, idx) => products.find((p) => p.id === item.productId)?.name || ""
+  //     )
+  //   );
+  //   setProductSuggestions(items.map(() => []));
+  //   setShowProductSuggestions(items.map(() => false));
+  // }, [items, products]);
 
   // When a suggestion is clicked
   const handleCustomerSuggestionClick = (customer: Customer) => {
@@ -199,15 +227,16 @@ export default function SalesPage() {
 
   // Save new customer
   const handleSaveNewCustomer = async () => {
-    if (!newCustomer.name) {
-      alert("Customer name is required");
+    const orgId = getOrgId();
+    if (!newCustomer.name || !orgId) {
+      alert("Customer name and organization required");
       return;
     }
     try {
       const res = await fetch("/api/master/customer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...newCustomer, organizationId: "org-1" }),
+        body: JSON.stringify({ ...newCustomer, organizationId: orgId }),
       });
       const result = await res.json();
       if (result.success && result.customer) {
@@ -316,16 +345,17 @@ export default function SalesPage() {
   };
 
   // Handle payment
-  const handleAmountReceived = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setAmountReceived(Number(e.target.value));
-  };
+  // const handleAmountReceived = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   setAmountReceived(Number(e.target.value));
+  // };
 
   // Submit sale (API call)
   const handleSubmit = async () => {
+    const orgId = getOrgId();
     // Use customerDetails if selected, else use newCustomer
     const customer = customerDetails || newCustomer;
-    if (!customer.name) {
-      alert("Customer name is required");
+    if (!customer.name || !orgId) {
+      alert("Customer name and organization required");
       return;
     }
     const saleData = {
@@ -345,17 +375,17 @@ export default function SalesPage() {
       })),
       subtotal,
       discount: totalDiscount,
-      discountType: "value",
+      discountType: "FIXED",
       cgst: totalGST / 2,
       sgst: totalGST / 2,
       igst: 0,
       totalAmount: grandTotal,
-      paymentMethod,
-      paymentStatus: amountReceived >= grandTotal ? "Paid" : "Due",
-      status: "Completed",
+      paymentMethod: paymentMethod.toUpperCase(),
+      paymentStatus: amountReceived >= grandTotal ? "PAID" : "PENDING",
+      status: "COMPLETED",
       notes: "",
-      organizationId: "org-1",
-      createdById: "user-1",
+      organizationId: orgId,
+      createdById: user?.id,
     };
     try {
       const res = await fetch("/api/sales", {
@@ -377,11 +407,30 @@ export default function SalesPage() {
 
   // Handle product suggestion click
   const handleProductSuggestionClick = (idx: number, product: Product) => {
-    handleItemChange(idx, "productId", product.id);
+    // Directly update the item with all product fields from the suggestion
+    const updated = [...items];
+    updated[idx] = {
+      ...updated[idx],
+      productId: product.id,
+      rate: product.retailRate || 0,
+      gst: product.gstPercentage || 0,
+      quantity: 1,
+      discount: 0,
+      amount: product.retailRate || 0,
+      gstAmount: calculateGST(
+        product.retailRate || 0,
+        product.gstPercentage || 0
+      ),
+    };
+    setItems(updated);
+    recalculateSummary(updated);
+
+    // Set the input value
     const updatedQueries = [...productQueries];
     updatedQueries[idx] = product.name;
     setProductQueries(updatedQueries);
 
+    // Hide suggestions
     const updatedShow = [...showProductSuggestions];
     updatedShow[idx] = false;
     setShowProductSuggestions(updatedShow);
@@ -405,19 +454,94 @@ export default function SalesPage() {
   }, []);
 
   const invoiceRef = useRef<HTMLDivElement>(null);
-    const handlePrint = useReactToPrint({
-    content: () => invoiceRef.current,
-    pageStyle: "@media print { body { background: white; } }",
-  });
+  //   const handlePrint = useReactToPrint({
+  //   onBeforeGetContent: () => invoiceRef.current,
+  //   pageStyle: "@media print { body { background: white; } }",
+  // });
 
-  return (
+  function removeLeadingZeros(value: string) {
+    return value.replace(/^0+(?=\d)/, "");
+  }
+
+ return (
     <div className="container mx-auto p-1 space-y-8">
-      <div className=" rounded-lg  p-1">
+      <div className="rounded-lg p-1">
+        {/* Header Section */}
+        <div className="mb-6 flex items-center gap-3 justify-between">
+          <div className="flex items-center gap-3">
+            <div
+              className="w-2 h-10 rounded bg-[var(--color-primary)] shadow"
+              aria-hidden="true"
+            />
+            <div className="flex items-center gap-2">
+              {/* Invoice Icon */}
+              <svg
+                width="32"
+                height="32"
+                fill="none"
+                viewBox="0 0 24 24"
+                className="text-[var(--color-primary)]"
+              >
+                <rect
+                  x="4"
+                  y="4"
+                  width="16"
+                  height="16"
+                  rx="3"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  fill="none"
+                />
+                <path
+                  d="M8 9h8M8 13h5"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  fill="none"
+                />
+              </svg>
+              <h2
+                className="text-3xl font-bold tracking-tight drop-shadow"
+                style={{
+                  color: "var(--color-card-foreground)",
+                  letterSpacing: "-0.02em",
+                }}
+              >
+                Sales Invoice
+              </h2>
+            </div>
+          </div>
+          {/* Sales History Button */}
+        <Link
+            href="/sales/history"
+            className="ml-auto px-5 py-2 rounded-xl font-semibold transition-colors border shadow
+              bg-[var(--color-primary)] text-[var(--color-primary-foreground)]
+              hover:bg-[var(--color-primary)]/90 hover:shadow-lg
+              focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.5rem",
+            }}
+          >
+            <svg
+              width="20"
+              height="20"
+              fill="none"
+              viewBox="0 0 24 24"
+              className="inline-block"
+              style={{ color: "var(--color-primary-foreground)" }}
+            >
+              <path
+                d="M7 7h10M7 12h6M5 21h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2Z"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinejoin="round"
+              />
+            </svg>
+            Sales History
+          </Link>
+        </div>
         <div ref={invoiceRef}>
-          <h2 className="text-2xl font-bold text-card-foreground mb-6">
-            Sales Invoice
-          </h2>
-
           {/* Customer Section */}
           <div className="space-y-6 mb-8">
             <h3 className="text-lg font-semibold text-foreground border-b pb-2">
@@ -555,15 +679,17 @@ export default function SalesPage() {
               </div>
             </div>
             <div className="flex gap-2 mt-2">
-              <button
-                className="bg-primary text-primary-foreground px-4 py-2 rounded-md font-medium"
-                onClick={handleSaveNewCustomer}
-                type="button"
-              >
-                Save Customer
-              </button>
+              {!customerDetails && (
+                <button
+                  className="bg-primary text-primary-foreground px-4 py-2 rounded-md font-medium"
+                  onClick={handleSaveNewCustomer}
+                  type="button"
+                >
+                  Save Customer
+                </button>
+              )}
             </div>
-            {customerDetails && (
+            {/* {customerDetails && (
               <div className="mt-2">
                 <div className="text-sm font-semibold text-muted-foreground mb-1">
                   Selected Customer Details:
@@ -574,7 +700,7 @@ export default function SalesPage() {
                   <div>GSTIN: {customerDetails.gstin || "-"}</div>
                 </div>
               </div>
-            )}
+            )} */}
           </div>
 
           {/* Product Entry Section */}
@@ -662,49 +788,69 @@ export default function SalesPage() {
                     <input
                       type="number"
                       min={1}
-                      value={item.quantity}
+                      value={item.quantity === 0 ? "" : item.quantity}
                       onChange={(e) =>
                         handleItemChange(
                           idx,
                           "quantity",
-                          Number(e.target.value)
+                          Number(removeLeadingZeros(e.target.value))
                         )
                       }
                       className="border rounded px-2 py-1 w-16 bg-background text-center"
+                      onFocus={(e) => {
+                        if (e.target.value === "0") e.target.value = "";
+                      }}
                     />
                   </td>
                   <td className="text-center px-3 py-2">
                     <input
                       type="number"
-                      value={item.rate}
+                      value={item.rate === 0 ? "" : item.rate}
                       onChange={(e) =>
-                        handleItemChange(idx, "rate", Number(e.target.value))
+                        handleItemChange(
+                          idx,
+                          "rate",
+                          Number(removeLeadingZeros(e.target.value))
+                        )
                       }
                       className="border rounded px-2 py-1 w-20 bg-background text-center"
+                      onFocus={(e) => {
+                        if (e.target.value === "0") e.target.value = "";
+                      }}
                     />
                   </td>
                   <td className="text-center px-3 py-2">
                     <input
                       type="number"
-                      value={item.discount}
+                      value={item.discount === 0 ? "" : item.discount}
                       onChange={(e) =>
                         handleItemChange(
                           idx,
                           "discount",
-                          Number(e.target.value)
+                          Number(removeLeadingZeros(e.target.value))
                         )
                       }
                       className="border rounded px-2 py-1 w-16 bg-background text-center"
+                      onFocus={(e) => {
+                        if (e.target.value === "0") e.target.value = "";
+                      }}
                     />
                   </td>
                   <td className="text-center px-3 py-2">
                     <input
                       type="number"
-                      value={item.gst}
+                      value={item.gst === 0 ? "" : item.gst}
                       onChange={(e) =>
-                        handleItemChange(idx, "gst", Number(e.target.value))
+                        handleItemChange(
+                          idx,
+                          "gst",
+                          Number(removeLeadingZeros(e.target.value))
+                        )
                       }
                       className="border rounded px-2 py-1 w-14 bg-background text-center"
+                      onFocus={(e) => {
+                        if (e.target.value === "0") e.target.value = "";
+                      }}
                     />
                   </td>
                   <td className="text-right px-3 py-2">
@@ -950,8 +1096,12 @@ export default function SalesPage() {
                 </label>
                 <input
                   type="number"
-                  value={amountReceived}
-                  onChange={handleAmountReceived}
+                  value={amountReceived === 0 ? "" : amountReceived}
+                  onChange={(e) =>
+                    setAmountReceived(
+                      Number(removeLeadingZeros(e.target.value))
+                    )
+                  }
                   className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 />
                 <div className="mt-2 text-sm">
@@ -978,13 +1128,13 @@ export default function SalesPage() {
           >
             Save & Print Invoice
           </button>
-          <button
+          {/* <button
             className="bg-muted text-foreground hover:bg-muted/80 px-6 py-2 rounded-md font-medium transition-colors border"
             type="button"
             onClick={handlePrint}
           >
             Print Invoice
-          </button>
+          </button> */}
         </div>
       </div>
     </div>

@@ -38,7 +38,9 @@ interface ColumnMeta {
 const fetchProducts = async () => {
   const res = await fetch(API_URL);
   if (!res.ok) throw new Error("Failed to fetch products");
-  return res.json();
+  const data = await res.json();
+  // Return only the array, not the whole object
+  return Array.isArray(data.products) ? data.products : [];
 };
 
 const ProductPage = () => {
@@ -51,15 +53,29 @@ const ProductPage = () => {
   const [globalFilter, setGlobalFilter] = useState("");
   const [error, setError] = useState<string | null>(null);
 
+  const organizationId =
+    typeof window !== "undefined"
+      ? localStorage.getItem("organizationId")
+      : null;
+
+
   // Fetch products with TanStack Query
-  const {
-    data: products = [],
+   const {
+    data: productsRaw = [],
     isLoading: loading,
     refetch,
   } = useQuery<Product[]>({
     queryKey: ["products"],
     queryFn: fetchProducts,
   });
+
+  const products = useMemo(
+    () =>
+      organizationId
+        ? productsRaw.filter((p) => p.organizationId === organizationId)
+        : [],
+    [productsRaw, organizationId]
+  );
 
   // Mutations for add/update/delete
   const addOrUpdateProduct = useMutation({

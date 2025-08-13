@@ -53,10 +53,14 @@ model Organization {
   stockAdjustments     StockAdjustment[]
   receipts             Receipt[]
   payments             Payment[]
-  counters             Counter[]
+  counters             Counter[]        @relation("OrgCounters")
   auditLogs            AuditLog[]
   stockLedgers    StockLedger[]
   stockTransfers  StockTransfer[]
+
+  stores               Store[]          
+
+  autoCounters         AutoCounter[] 
 
   @@map("organizations")
 }
@@ -86,6 +90,9 @@ model User {
   purchasesCreated Purchase[]
   receiptsCreated Receipt[]
   paymentsCreated Payment[]
+
+  stores       UserStore[]
+  counters     UserCounter[]
 
   @@map("users")
 }
@@ -257,6 +264,9 @@ model Purchase {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
+   storeId     String
+  store       Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
   // Multi-tenancy
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -342,6 +352,10 @@ model Sale {
   saleDate        DateTime
   customerId      String?
   customer        Customer? @relation(fields: [customerId], references: [id])
+  storeId         String
+  store           Store    @relation(fields: [storeId], references: [id])
+  counterId       String?
+  counter         Counter? @relation(fields: [counterId], references: [id])
   
   // For walk-in customers
   customerName    String?
@@ -366,6 +380,8 @@ model Sale {
   notes           String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+
+  
 
   // Multi-tenancy
   organizationId String
@@ -432,6 +448,9 @@ model StockLedger {
   remarks       String?
   createdAt     DateTime @default(now())
 
+   storeId     String
+  store       Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 }
@@ -459,6 +478,9 @@ model StockTransfer {
   reason          String?
   status          TransferStatus @default(PENDING)
   createdAt       DateTime @default(now())
+
+   storeId     String
+  store       Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
 
   // Multi-tenancy
   organizationId String
@@ -497,6 +519,9 @@ model Quotation {
   status          QuotationStatus @default(PENDING)
   notes           String?
   createdAt       DateTime @default(now())
+
+   storeId     String
+  store       Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
 
   // Multi-tenancy
   organizationId String
@@ -573,6 +598,9 @@ model Warehouse {
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
 
+  storeId    String
+  store       Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
@@ -596,6 +624,9 @@ model Inventory {
   avgCostPrice  Float    @default(0)
   lastUpdated   DateTime @default(now())
 
+   storeId     String
+  store       Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
   // Multi-tenancy
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -615,6 +646,9 @@ model StockAdjustment {
   adjustmentType    StockAdjustmentType
   quantity          Float
   reason            String?
+
+   storeId     String
+  store       Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
   createdAt         DateTime @default(now())
   organizationId    String
   organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -784,9 +818,9 @@ enum PrintFormat {
 // COUNTERS FOR AUTO-NUMBERING
 // ============================================
 
-model Counter {
+model AutoCounter {
   id             String   @id @default(cuid())
-  name           String   // invoice, quotation, receipt, etc.
+  name           String
   currentValue   Int      @default(0)
   prefix         String   @default("")
   suffix         String   @default("")
@@ -827,4 +861,86 @@ model AuditLog {
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@map("audit_logs")
+}
+
+model Store {
+  id          String   @id @default(cuid())
+  name        String
+  address     String?
+  phone       String?
+  email       String?
+  gstin       String?
+  stateCode   String?
+  isActive    Boolean  @default(true)
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Multi-tenancy
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Relations
+  counters      Counter[]      @relation("StoreCounters")
+  inventory     Inventory[]
+  warehouses    Warehouse[]
+  purchases     Purchase[]
+  sales         Sale[]
+  quotations    Quotation[]
+  stockAdjustments  StockAdjustment[]
+  stockTransfers    StockTransfer[]
+  stockLedgers      StockLedger[]
+  users         UserStore[]
+}
+
+// Add Counter model for POS terminals within stores
+model Counter {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Store relation
+  storeId     String
+  store       Store    @relation("StoreCounters", fields: [storeId], references: [id], onDelete: Cascade)
+
+  // Organization relation (for OrgCounters)
+  organizationId String
+  organization   Organization @relation("OrgCounters", fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Relations
+  sales       Sale[]
+  users       UserCounter[]
+}
+
+// Many-to-many relation between users and stores
+model UserStore {
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  storeId     String
+  store       Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  role        StoreRole @default(STAFF)
+  isDefault   Boolean  @default(false)
+  assignedAt  DateTime @default(now())
+
+  @@id([userId, storeId])
+}
+
+// Many-to-many relation between users and counters
+model UserCounter {
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  counterId   String
+  counter     Counter  @relation(fields: [counterId], references: [id], onDelete: Cascade)
+  assignedAt  DateTime @default(now())
+
+  @@id([userId, counterId])
+}
+
+enum StoreRole {
+  MANAGER
+  SUPERVISOR
+  STAFF
 }

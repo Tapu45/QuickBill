@@ -27,6 +27,8 @@ export async function POST(req: NextRequest) {
       notes,
       organizationId,
       createdById,
+      storeId,
+      counterId
     } = data;
 
     // Create Sale and SaleItems in a transaction
@@ -51,6 +53,8 @@ export async function POST(req: NextRequest) {
         notes,
         organizationId,
         createdById,
+        storeId,
+        counterId,
         items: {
           create: items.map((item: any) => ({
             productId: item.productId,
@@ -79,19 +83,32 @@ export async function GET(req: NextRequest) {
     const organizationId = searchParams.get("organizationId");
     const customerId = searchParams.get("customerId");
     const invoiceNumber = searchParams.get("invoiceNumber");
+    const dateFrom = searchParams.get("dateFrom");
+    const dateTo = searchParams.get("dateTo");
+    const storeId = searchParams.get("storeId");
+    const counterId = searchParams.get("counterId"); // <-- Add this line
 
     const where: any = {};
     if (organizationId) where.organizationId = organizationId;
     if (customerId) where.customerId = customerId;
-    if (invoiceNumber) where.invoiceNumber = invoiceNumber;
+    if (invoiceNumber) where.invoiceNumber = { contains: invoiceNumber };
+    if (storeId) where.storeId = storeId; // <-- Add this line
+    if (counterId) where.counterId = counterId; // <-- Add this line
+    if (dateFrom || dateTo) {
+      where.saleDate = {};
+      if (dateFrom) where.saleDate.gte = new Date(dateFrom);
+      if (dateTo) {
+        const toDate = new Date(dateTo);
+        toDate.setDate(toDate.getDate() + 1);
+        where.saleDate.lt = toDate;
+      }
+    }
 
     const sales = await prisma.sale.findMany({
       where,
       include: {
         customer: true,
-        items: {
-          include: { product: true },
-        },
+        items: { include: { product: true } },
         createdBy: true,
       },
       orderBy: { saleDate: "desc" },

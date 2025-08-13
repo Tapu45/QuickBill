@@ -11,6 +11,8 @@ export type Customer = {
 };
 
 export type Product = {
+  retailRate: number;
+  gstPercentage: number;
   code: any;
   id: string;
   name: string;
@@ -27,4 +29,35 @@ export type SaleItem = {
   gst: number;
   amount: number;
   gstAmount: number;
+};
+
+export type Sale = {
+  id: string;
+  invoiceNumber: string;
+  saleDate: string;
+  customerName: string | null;
+  totalAmount: number;
+  paymentStatus: string;
+  customerPhone?: string | null;
+  customerAddress?: string | null;
+  items?: {
+    id: string;
+    productId: string;
+    quantity: number;
+    rate: number;
+    discount: number;
+    amount: number;
+    gstAmount: number;
+    product?: {
+      name: string;
+      hsn?: string;
+    };
+  }[];
+  paymentMethod?: string;
+  subtotal?: number;
+  discount?: number;
+  cgst?: number;
+  sgst?: number;
+  igst?: number;
+  notes?: string;
 };

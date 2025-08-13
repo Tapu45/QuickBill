@@ -6,6 +6,7 @@ import { AppThemeProvider } from "@/components/provider/ThemeProvider";
 import { LenisProvider } from "@/utils/Lenis";
 import Layout from "@/components/Layout/Applayout";
 import SessionClientProvider from "@/components/provider/Sessionprovider";
+import { UserProvider } from "@/context/UserContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,8 +37,10 @@ export default function RootLayout({
         <SessionClientProvider>
           <LenisProvider>
             <AppThemeProvider>
-              <Providers>
-                <Layout>{children}</Layout>
+             <Providers>
+                <UserProvider> {/* <-- wrap here */}
+                  <Layout>{children}</Layout>
+                </UserProvider>
               </Providers>
             </AppThemeProvider>
           </LenisProvider>
