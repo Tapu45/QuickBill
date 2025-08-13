@@ -22,10 +22,12 @@ export default function SalesHistoryPage() {
       printSaleDetails(selectedSale.id, selectedSale.invoiceNumber);
   };
 
-  useEffect(() => {
+ useEffect(() => {
+  if (typeof window !== "undefined") {
     const orgId = localStorage.getItem("organizationId");
     setOrganizationId(orgId);
-  }, []);
+  }
+}, []);
 
   useEffect(() => {
     if (!organizationId) return;

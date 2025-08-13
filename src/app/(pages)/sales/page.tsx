@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Customer, Product, SaleItem } from "@/types/Sales";
-import { useReactToPrint } from "react-to-print";
 import { useUser } from "@/context/UserContext";
 import Link from "next/link";
 
