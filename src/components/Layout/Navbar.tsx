@@ -4,20 +4,15 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Bell, Menu, MessageCircle, Search } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { useUser } from "@/context/UserContext";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectGroup, SelectItem } from "@/components/ui/select";
 
 const Navbar = ({ toggleSidebar }: { toggleSidebar: () => void }) => {
   const pathname = usePathname();
   const pageName = getPageName(pathname);
 
-  const [user, setUser] = useState<any>(null);
-
-  useEffect(() => {
-    fetch("/api/user/me")
-      .then((res) => res.json())
-      .then((data) => {
-        if (!data.error) setUser(data);
-      });
-  }, []);
+  // Use context for user, store, counter
+  const { user, activeStore, activeCounter, setActiveStore, setActiveCounter, loading } = useUser();
 
   return (
     <motion.nav
@@ -35,6 +30,64 @@ const Navbar = ({ toggleSidebar }: { toggleSidebar: () => void }) => {
             <Menu className="h-5 w-5" />
           </button>
           <h1 className="text-xl font-semibold">{pageName}</h1>
+        </div>
+
+        {/* Store/Counter Dropdowns */}
+        <div className="flex items-center gap-4">
+          {/* Store Dropdown */}
+          {!loading && user && user.stores.length > 0 && (
+            <Select
+              value={activeStore?.id || ""}
+              onValueChange={(value) => {
+                const selectedStore = user.stores.find((s) => s.id === value);
+                if (selectedStore) setActiveStore(selectedStore);
+              }}
+              disabled={user.role !== "ADMIN" || user.stores.length === 1}
+            >
+              <SelectTrigger className="w-[160px]">
+                <SelectValue placeholder="Select Store" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {user.stores.map((store) => (
+                    <SelectItem key={store.id} value={store.id}>
+                      {store.name}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          )}
+
+          {/* Counter Dropdown (show only if page is sales or user has counters) */}
+          {!loading &&
+            user &&
+            user.counters.length > 0 &&
+            (pathname.includes("/sales") || pathname.includes("/counter")) && (
+              <Select
+                value={activeCounter?.id || ""}
+                onValueChange={(value) => {
+                  const selectedCounter = user.counters.find((c) => c.id === value);
+                  if (selectedCounter) setActiveCounter(selectedCounter);
+                }}
+                disabled={user.role !== "ADMIN" || user.counters.length === 1}
+              >
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="Select Counter" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {user.counters
+                      .filter((c) => activeStore && c.storeId === activeStore.id)
+                      .map((counter) => (
+                        <SelectItem key={counter.id} value={counter.id}>
+                          {counter.name}
+                        </SelectItem>
+                      ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            )}
         </div>
 
         {/* Right side */}
@@ -69,7 +122,7 @@ const Navbar = ({ toggleSidebar }: { toggleSidebar: () => void }) => {
             <Bell className="h-5 w-5 text-gray-900 dark:text-white" />
           </motion.button>
 
-           <motion.div
+          <motion.div
             whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.96 }}
             className="rounded-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 h-8 w-8 flex items-center justify-center overflow-hidden shadow-sm transition cursor-pointer"

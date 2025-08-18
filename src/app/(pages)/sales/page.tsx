@@ -84,6 +84,7 @@ export default function SalesPage() {
   );
   const [showSuggestions, setShowSuggestions] = useState(false);
   const suggestionsRef = useRef<HTMLUListElement>(null);
+  
 
   
 
@@ -384,7 +385,7 @@ export default function SalesPage() {
       status: "COMPLETED",
       notes: "",
       organizationId: orgId,
-      createdById: user?.id,
+      createdById: user?.user?.id,
     };
     try {
       const res = await fetch("/api/sales", {
