@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowsClockwise } from "@phosphor-icons/react";
+import { useUser } from "@/context/UserContext";
 
 type StockLedgerItem = {
   product: any;
@@ -42,6 +43,7 @@ export default function InventoryLedgerPage() {
   const [ledger, setLedger] = useState<StockLedgerItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [organizationId, setOrganizationId] = useState<string>("");
+  const { activeStore } = useUser();
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -50,19 +52,19 @@ export default function InventoryLedgerPage() {
     }
   }, []);
 
-  useEffect(() => {
-    async function fetchLedger() {
-      if (!organizationId) return;
-      setLoading(true);
-      const res = await fetch(
-        `/api/stock?action=stock-ledger&organizationId=${organizationId}&limit=50`
-      );
-      const data = await res.json();
-      setLedger(data);
-      setLoading(false);
-    }
-    fetchLedger();
-  }, [organizationId]);
+useEffect(() => {
+  async function fetchLedger() {
+    if (!organizationId || !activeStore?.id) return;
+    setLoading(true);
+    const res = await fetch(
+      `/api/stock?action=stock-ledger&organizationId=${organizationId}&storeId=${activeStore.id}&limit=50`
+    );
+    const data = await res.json();
+    setLedger(data);
+    setLoading(false);
+  }
+  fetchLedger();
+}, [organizationId, activeStore]);
 
   return (
     <div

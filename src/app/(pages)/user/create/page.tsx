@@ -1,6 +1,6 @@
 "use client";
-import { Suspense, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Users, Plus, Shield, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,8 +17,14 @@ export default function AddUserPage() {
 
 function AddUserPageContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const organizationId = searchParams.get("organizationId") || "";
+
+  // Get organizationId from localStorage
+  const [organizationId, setOrganizationId] = useState<string>("");
+
+  useEffect(() => {
+    const orgId = localStorage.getItem("organizationId") || "";
+    setOrganizationId(orgId);
+  }, []);
 
   const [user, setUser] = useState({
     email: "",
@@ -35,12 +41,6 @@ function AddUserPageContent() {
   const [success, setSuccess] = useState("");
   const [addedUsers, setAddedUsers] = useState<string[]>([]);
   const { user: currentUser } = useUser();
-  const userStores = currentUser?.stores || [];
-  const userCounters = currentUser?.counters || [];
-
-  // Add state for selected stores/counters
-  const [selectedStoreIds, setSelectedStoreIds] = useState<string[]>([]);
-  const [selectedCounterIds, setSelectedCounterIds] = useState<string[]>([]);
 
   // Avatar upload handler (Cloudinary)
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -79,8 +79,6 @@ function AddUserPageContent() {
         ...user,
         organizationId,
         action: "create",
-        storeIds: selectedStoreIds,
-        counterIds: selectedCounterIds,
       }),
     });
     const data = await res.json();
@@ -98,47 +96,18 @@ function AddUserPageContent() {
         image: "",
         role: "MANAGER",
       });
-      setSelectedStoreIds([]);
-      setSelectedCounterIds([]);
     } else {
       setError(data.error || "Failed to add user");
     }
   };
+//
 
-  const handleSkip = () => {
-    router.push("/sales");
-  };
+ 
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="flex w-full max-w-3xl rounded-3xl overflow-hidden shadow-2xl bg-card border border-border">
-        {/* Left Panel */}
-        <div className="w-1/2 bg-primary flex flex-col justify-between p-8 relative overflow-hidden">
-          <div className="relative z-10">
-            <div className="text-3xl font-bold mb-3 flex items-center gap-3 text-primary-foreground">
-              <Users className="w-8 h-8 text-primary-foreground" />
-              <span>Add Team Members</span>
-            </div>
-            <p className="text-primary-foreground/80 text-base mb-6">
-              Invite your team now or skip and add users later from the
-              dashboard.
-            </p>
-            <ul className="list-disc pl-6 text-primary-foreground/80 text-sm space-y-2">
-              <li>Assign roles and permissions</li>
-              <li>Collaborate on invoices and reports</li>
-              <li>Manage user access anytime</li>
-            </ul>
-          </div>
-          <div className="text-xs text-primary-foreground/60 relative z-10 mt-8">
-            <div className="flex items-center gap-2 mb-2">
-              <Shield className="w-4 h-4" />
-              <span>Secured by 256-bit SSL encryption</span>
-            </div>
-            <div>TERMS OF USE AND PRIVACY POLICY</div>
-          </div>
-        </div>
-        {/* Right Panel */}
-        <div className="w-1/2 flex flex-col items-center justify-center p-8 bg-card">
+        <div className="w-full flex flex-col items-center justify-center p-8 bg-card">
           <motion.div
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
@@ -261,50 +230,7 @@ function AddUserPageContent() {
                 <option value="CASHIER">Cashier</option>
                 <option value="SALESPERSON">Salesperson</option>
               </select>
-              {/* Store Assignment */}
-              <div className="mb-4">
-                <label className="block font-semibold mb-1">
-                  Assign Stores
-                </label>
-                <select
-                  multiple
-                  value={selectedStoreIds}
-                  onChange={(e) =>
-                    setSelectedStoreIds(
-                      Array.from(e.target.selectedOptions, (opt) => opt.value)
-                    )
-                  }
-                  className="h-10 w-full bg-input border-2 border-border rounded-xl"
-                >
-                  {userStores.map((store: { id: string; name: string }) => (
-                    <option key={store.id} value={store.id}>
-                      {store.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              {/* Counter Assignment */}
-              <div className="mb-4">
-                <label className="block font-semibold mb-1">
-                  Assign Counters
-                </label>
-                <select
-                  multiple
-                  value={selectedCounterIds}
-                  onChange={(e) =>
-                    setSelectedCounterIds(
-                      Array.from(e.target.selectedOptions, (opt) => opt.value)
-                    )
-                  }
-                  className="h-10 w-full bg-input border-2 border-border rounded-xl"
-                >
-                  {userCounters.map((counter: { id: string; name: string }) => (
-                    <option key={counter.id} value={counter.id}>
-                      {counter.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+             
               <Button
                 type="submit"
                 disabled={loading}
@@ -313,19 +239,6 @@ function AddUserPageContent() {
                 {loading ? "Adding..." : "Add User"}
               </Button>
             </form>
-            <div className="flex flex-col items-center mt-6 gap-2">
-              <Button variant="outline" className="w-full" onClick={handleSkip}>
-                Skip & Create Later
-              </Button>
-              <span className="text-xs text-muted-foreground text-center">
-                You can add more users anytime from the dashboard.
-              </span>
-              {addedUsers.length > 0 && (
-                <div className="mt-2 text-xs text-primary">
-                  Added: {addedUsers.join(", ")}
-                </div>
-              )}
-            </div>
           </motion.div>
         </div>
       </div>

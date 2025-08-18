@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { PurchaseItem, PurchaseOrder } from "@/types/Purchase";
 import PurchaseOrderTable from "@/components/minicomponents/Purchase/PoList";
 import { useSession } from "next-auth/react";
+import { useUser } from "@/context/UserContext";
 
 export default function PurchasePage() {
   const [form, setForm] = useState<any>({
@@ -28,6 +29,7 @@ export default function PurchasePage() {
   const [products, setProducts] = useState<any[]>([]);
   const [warehouses, setWarehouses] = useState<any[]>([]);
   const [suppliers, setSuppliers] = useState<any[]>([]);
+  const { activeStore, loading: userLoading } = useUser();
 
   const { data: session } = useSession();
 
@@ -44,12 +46,12 @@ export default function PurchasePage() {
     const organizationId = localStorage.getItem("organizationId");
     if (!organizationId) return;
 
-    // Fetch products
     fetch(`/api/master/product?organizationId=${organizationId}`)
       .then((res) => res.json())
-      .then(setProducts);
+      .then((data) =>
+        setProducts(Array.isArray(data.products) ? data.products : [])
+      ); // <-- FIX HERE
 
-    // Fetch warehouses
     fetch(`/api/stock?action=warehouses&organizationId=${organizationId}`)
       .then((res) => res.json())
       .then(setWarehouses);
@@ -58,9 +60,11 @@ export default function PurchasePage() {
   // Fetch all purchase orders
   const fetchPOs = async () => {
     const organizationId = localStorage.getItem("organizationId");
-    if (!organizationId) return;
+    if (!organizationId || !activeStore?.id) return;
     setLoading(true);
-    const res = await fetch(`/api/purchase?organizationId=${organizationId}`);
+    const res = await fetch(
+      `/api/purchase?organizationId=${organizationId}&storeId=${activeStore.id}`
+    );
     const data = await res.json();
     setPurchaseOrders(Array.isArray(data) ? data : []);
     setLoading(false);
@@ -68,7 +72,7 @@ export default function PurchasePage() {
 
   useEffect(() => {
     fetchPOs();
-  }, []);
+  }, [activeStore]);
 
   // Auto-calculate subtotal, taxes, and totalAmount
   useEffect(() => {
@@ -133,6 +137,7 @@ export default function PurchasePage() {
         ...form,
         organizationId,
         createdById: session.user.id,
+        storeId: activeStore?.id,
       }),
     });
     if (res.ok) {
@@ -632,7 +637,11 @@ export default function PurchasePage() {
         </form>
       </div>
 
-      <PurchaseOrderTable purchaseOrders={purchaseOrders} loading={loading} />
+      <PurchaseOrderTable
+        key={activeStore?.id} // Add this line
+        purchaseOrders={purchaseOrders}
+        loading={loading}
+      />
     </div>
   );
 }

@@ -2,8 +2,13 @@
 
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, PencilSimple, Trash, Warehouse as WarehouseIcon } from "@phosphor-icons/react";
-
+import {
+  Plus,
+  PencilSimple,
+  Trash,
+  Warehouse as WarehouseIcon,
+} from "@phosphor-icons/react";
+import { useUser } from "@/context/UserContext";
 type Warehouse = {
   id: string;
   name: string;
@@ -40,6 +45,7 @@ export default function ManageWarehousesPage() {
     address: "",
     isDefault: false,
   });
+  const { activeStore } = useUser();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
@@ -53,9 +59,11 @@ export default function ManageWarehousesPage() {
   }, []);
 
   const fetchWarehouses = async () => {
-    if (!organizationId) return;
+    if (!organizationId || !activeStore?.id) return;
     setLoading(true);
-    const res = await fetch(`/api/stock?action=warehouses&organizationId=${organizationId}`);
+    const res = await fetch(
+      `/api/stock?action=warehouses&organizationId=${organizationId}&storeId=${activeStore.id}`
+    );
     const data = await res.json();
     setWarehouses(data);
     setLoading(false);
@@ -96,6 +104,7 @@ export default function ManageWarehousesPage() {
             name: form.name,
             address: form.address,
             isDefault: form.isDefault,
+            storeId: activeStore?.id, // <-- Add this line
           }),
         });
       } else {
@@ -108,6 +117,7 @@ export default function ManageWarehousesPage() {
             name: form.name,
             address: form.address,
             isDefault: form.isDefault,
+            storeId: activeStore?.id, // <-- Add this line
           }),
         });
       }
@@ -145,6 +155,7 @@ export default function ManageWarehousesPage() {
         body: JSON.stringify({
           action: "warehouse-delete",
           id,
+          storeId: activeStore?.id, // <-- Add this line
         }),
       });
       if (!res.ok) throw new Error((await res.json()).error || "Failed");
@@ -157,12 +168,9 @@ export default function ManageWarehousesPage() {
   };
 
   return (
-    <div
-      className="p-0 min-h-screen"
-    
-    >
+    <div className="p-0 min-h-screen">
       {/* Header */}
-     <motion.div
+      <motion.div
         className="mb-6 flex items-center justify-between"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -174,7 +182,11 @@ export default function ManageWarehousesPage() {
             aria-hidden="true"
           />
           <div className="flex items-center gap-2">
-            <WarehouseIcon size={32} weight="fill" className="text-[var(--color-primary)]" />
+            <WarehouseIcon
+              size={32}
+              weight="fill"
+              className="text-[var(--color-primary)]"
+            />
             <h1
               className="text-3xl font-bold tracking-tight drop-shadow"
               style={{
@@ -205,9 +217,14 @@ export default function ManageWarehousesPage() {
           color: "var(--color-card-foreground)",
         }}
       >
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <form
+          onSubmit={handleSubmit}
+          className="grid grid-cols-1 md:grid-cols-3 gap-4"
+        >
           <div>
-            <label className="block mb-1 text-sm font-medium">Warehouse Name *</label>
+            <label className="block mb-1 text-sm font-medium">
+              Warehouse Name *
+            </label>
             <input
               type="text"
               name="name"
@@ -247,7 +264,9 @@ export default function ManageWarehousesPage() {
               id="isDefault"
               className="mr-2"
             />
-            <label htmlFor="isDefault" className="text-sm">Default Warehouse</label>
+            <label htmlFor="isDefault" className="text-sm">
+              Default Warehouse
+            </label>
           </div>
           <div className="md:col-span-3 flex items-center gap-4 mt-2">
             <button
@@ -296,7 +315,11 @@ export default function ManageWarehousesPage() {
       >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold flex items-center gap-2">
-            <WarehouseIcon size={22} weight="fill" style={{ color: "var(--color-chart-3)" }} />
+            <WarehouseIcon
+              size={22}
+              weight="fill"
+              style={{ color: "var(--color-chart-3)" }}
+            />
             Warehouses
           </h2>
         </div>

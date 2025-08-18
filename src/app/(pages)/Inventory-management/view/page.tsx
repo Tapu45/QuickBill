@@ -27,6 +27,7 @@ import {
   Cube,
 } from "@phosphor-icons/react";
 import { InventoryCharts } from "@/components/Graphs/Inventory";
+import { useUser } from "@/context/UserContext";
 
 // Register ChartJS components
 ChartJS.register(
@@ -101,6 +102,7 @@ export default function InventoryDashboard() {
     { name: string; count: number }[]
   >([]);
   const [loading, setLoading] = useState(true);
+  const { activeStore } = useUser();
 
   // Get organizationId from localStorage
   const [organizationId, setOrganizationId] = useState<string>("");
@@ -135,131 +137,130 @@ export default function InventoryDashboard() {
     },
   };
 
-  useEffect(() => {
-    async function fetchData() {
-      if (!organizationId) return;
-      setLoading(true);
+ useEffect(() => {
+  async function fetchData() {
+    if (!organizationId || !activeStore?.id) return;
+    setLoading(true);
 
-      try {
-        // Stock Valuation
-        const valueRes = await fetch(
-          `/api/stock?action=reports-stock-valuation&organizationId=${organizationId}`
-        );
-        const valueData: InventorySummary = await valueRes.json();
-        setStockValue(valueData.totalValue);
+    try {
+      // Stock Valuation
+      const valueRes = await fetch(
+        `/api/stock?action=reports-stock-valuation&organizationId=${organizationId}&storeId=${activeStore.id}`
+      );
+      const valueData: InventorySummary = await valueRes.json();
+      setStockValue(valueData.totalValue);
 
-        // Low Stock Alerts
-        const alertRes = await fetch(
-          `/api/stock?action=inventory-alerts&organizationId=${organizationId}`
-        );
-        const alertData: AlertItem[] = await alertRes.json();
-        setLowStock(alertData);
+      // Low Stock Alerts
+      const alertRes = await fetch(
+        `/api/stock?action=inventory-alerts&organizationId=${organizationId}&storeId=${activeStore.id}`
+      );
+      const alertData: AlertItem[] = await alertRes.json();
+      setLowStock(alertData);
 
-        // Recent Stock Movements
-        const movementRes = await fetch(
-          `/api/stock?action=stock-ledger&organizationId=${organizationId}&limit=5`
-        );
-        const movementData = await movementRes.json();
-        setRecentMovements(movementData);
+      // Recent Stock Movements
+      const movementRes = await fetch(
+        `/api/stock?action=stock-ledger&organizationId=${organizationId}&storeId=${activeStore.id}&limit=5`
+      );
+      const movementData = await movementRes.json();
+      setRecentMovements(movementData);
 
-        // Warehouses count
-        const warehouseRes = await fetch(
-          `/api/stock?action=warehouses&organizationId=${organizationId}`
-        );
-        const warehouses: Warehouse[] = await warehouseRes.json();
-        setWarehouseCount(warehouses.length);
+      // Warehouses count
+      const warehouseRes = await fetch(
+        `/api/stock?action=warehouses&organizationId=${organizationId}&storeId=${activeStore.id}`
+      );
+      const warehouses: Warehouse[] = await warehouseRes.json();
+      setWarehouseCount(warehouses.length);
 
-        // Products count & inactive products
-        const productRes = await fetch(
-          `/api/master/product?organizationId=${organizationId}`
-        );
-        let products = await productRes.json();
-        if (!Array.isArray(products)) {
-          // If the API returns { data: [...] } or similar, adjust accordingly:
-          products = products.data || [];
-        }
-        setProductCount(products.length);
-        setInactiveProducts(
-          products.filter((p: Product) => !p.isActive).length
-        );
-
-        // Out-of-stock items
-        const inventoryRes = await fetch(
-          `/api/stock?action=inventory&organizationId=${organizationId}`
-        );
-        const inventories = await inventoryRes.json();
-        setOutOfStockCount(
-          inventories.filter((inv: any) => inv.quantity === 0).length
-        );
-
-        // Pending Stock Transfers
-        const transferRes = await fetch(
-          `/api/stock?action=stock-transfer&organizationId=${organizationId}&status=PENDING`
-        );
-        const transfers: StockTransfer[] = await transferRes.json();
-        setPendingTransfers(transfers.length);
-
-        // Damaged/Lost Stock Adjustments
-        const damageRes = await fetch(
-          `/api/stock?action=stock-adjustments&organizationId=${organizationId}&adjustmentType=DAMAGE`
-        );
-        const lostRes = await fetch(
-          `/api/stock?action=stock-adjustments&organizationId=${organizationId}&adjustmentType=THEFT`
-        );
-        const damageAdjustments: StockAdjustment[] = await damageRes.json();
-        const lostAdjustments: StockAdjustment[] = await lostRes.json();
-        setDamagedLostCount(damageAdjustments.length + lostAdjustments.length);
-
-        // Stock Adjustments This Month
-        const now = new Date();
-        const monthStart = new Date(
-          now.getFullYear(),
-          now.getMonth(),
-          1
-        ).toISOString();
-        const monthEnd = new Date(
-          now.getFullYear(),
-          now.getMonth() + 1,
-          0
-        ).toISOString();
-        const monthAdjRes = await fetch(
-          `/api/stock?action=stock-adjustments&organizationId=${organizationId}`
-        );
-        const monthAdjustments: StockAdjustment[] = await monthAdjRes.json();
-        const monthCount = monthAdjustments.filter(
-          (adj) =>
-            adj.adjustmentDate >= monthStart && adj.adjustmentDate <= monthEnd
-        ).length;
-        setStockAdjustmentsMonth(monthCount);
-
-        // Top Moving Products (by movement count)
-        const ledgerRes = await fetch(
-          `/api/stock?action=stock-ledger&organizationId=${organizationId}`
-        );
-        const ledgerData = await ledgerRes.json();
-        const movementMap: Record<string, { name: string; count: number }> = {};
-        ledgerData.forEach((move: any) => {
-          if (!movementMap[move.productId]) {
-            movementMap[move.productId] = {
-              name: move.product?.name || move.productId,
-              count: 0,
-            };
-          }
-          movementMap[move.productId].count += 1;
-        });
-        const topMovers = Object.values(movementMap)
-          .sort((a, b) => b.count - a.count)
-          .slice(0, 5);
-        setTopMovingProducts(topMovers);
-      } catch (error) {
-        console.error("Error fetching inventory data:", error);
-      } finally {
-        setLoading(false);
+      // Products count & inactive products
+      const productRes = await fetch(
+        `/api/master/product?organizationId=${organizationId}&storeId=${activeStore.id}`
+      );
+      let products = await productRes.json();
+      if (!Array.isArray(products)) {
+        products = products.data || [];
       }
-    }
+      setProductCount(products.length);
+      setInactiveProducts(
+        products.filter((p: Product) => !p.isActive).length
+      );
 
-    fetchData();
-  }, [organizationId]);
+      // Out-of-stock items
+      const inventoryRes = await fetch(
+        `/api/stock?action=inventory&organizationId=${organizationId}&storeId=${activeStore.id}`
+      );
+      const inventories = await inventoryRes.json();
+      setOutOfStockCount(
+        inventories.filter((inv: any) => inv.quantity === 0).length
+      );
+
+      // Pending Stock Transfers
+      const transferRes = await fetch(
+        `/api/stock?action=stock-transfer&organizationId=${organizationId}&storeId=${activeStore.id}&status=PENDING`
+      );
+      const transfers: StockTransfer[] = await transferRes.json();
+      setPendingTransfers(transfers.length);
+
+      // Damaged/Lost Stock Adjustments
+      const damageRes = await fetch(
+        `/api/stock?action=stock-adjustments&organizationId=${organizationId}&storeId=${activeStore.id}&adjustmentType=DAMAGE`
+      );
+      const lostRes = await fetch(
+        `/api/stock?action=stock-adjustments&organizationId=${organizationId}&storeId=${activeStore.id}&adjustmentType=THEFT`
+      );
+      const damageAdjustments: StockAdjustment[] = await damageRes.json();
+      const lostAdjustments: StockAdjustment[] = await lostRes.json();
+      setDamagedLostCount(damageAdjustments.length + lostAdjustments.length);
+
+      // Stock Adjustments This Month
+      const now = new Date();
+      const monthStart = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        1
+      ).toISOString();
+      const monthEnd = new Date(
+        now.getFullYear(),
+        now.getMonth() + 1,
+        0
+      ).toISOString();
+      const monthAdjRes = await fetch(
+        `/api/stock?action=stock-adjustments&organizationId=${organizationId}&storeId=${activeStore.id}`
+      );
+      const monthAdjustments: StockAdjustment[] = await monthAdjRes.json();
+      const monthCount = monthAdjustments.filter(
+        (adj) =>
+          adj.adjustmentDate >= monthStart && adj.adjustmentDate <= monthEnd
+      ).length;
+      setStockAdjustmentsMonth(monthCount);
+
+      // Top Moving Products (by movement count)
+      const ledgerRes = await fetch(
+        `/api/stock?action=stock-ledger&organizationId=${organizationId}&storeId=${activeStore.id}`
+      );
+      const ledgerData = await ledgerRes.json();
+      const movementMap: Record<string, { name: string; count: number }> = {};
+      ledgerData.forEach((move: any) => {
+        if (!movementMap[move.productId]) {
+          movementMap[move.productId] = {
+            name: move.product?.name || move.productId,
+            count: 0,
+          };
+        }
+        movementMap[move.productId].count += 1;
+      });
+      const topMovers = Object.values(movementMap)
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5);
+      setTopMovingProducts(topMovers);
+    } catch (error) {
+      console.error("Error fetching inventory data:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  fetchData();
+}, [organizationId, activeStore]);
 
   // Prepare chart data
   const stockDistribution = {

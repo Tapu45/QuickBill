@@ -1,11 +1,44 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth";
+import  authOptions  from "@/app/api/auth/authOptions";
+
+// Utility function to check user access for store/counter
+async function checkUserAccess(userId: string, storeId?: string, counterId?: string) {
+  // Fetch user role
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw new Error("User not found");
+
+  if (user.role === "ADMIN") return true;
+
+  // Check store assignment
+  if (storeId) {
+    const storeAssigned = await prisma.userStore.findFirst({
+      where: { userId, storeId }
+    });
+    if (!storeAssigned) return false;
+  }
+
+  // Check counter assignment (if provided)
+  if (counterId) {
+    const counterAssigned = await prisma.userCounter.findFirst({
+      where: { userId, counterId }
+    });
+    if (!counterAssigned) return false;
+  }
+
+  return true;
+}
 
 // --- CREATE SALE (POST) ---
 export async function POST(req: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
     const data = await req.json();
-    // Expected: { invoiceNumber, saleDate, customerId, customerName, customerPhone, customerAddress, items, subtotal, discount, discountType, cgst, sgst, igst, totalAmount, paymentMethod, paymentStatus, status, notes, organizationId, createdById }
     const {
       invoiceNumber,
       saleDate,
@@ -31,6 +64,12 @@ export async function POST(req: NextRequest) {
       counterId
     } = data;
 
+    // Access control: check user assignment
+    const hasAccess = await checkUserAccess(session.user.id, storeId, counterId);
+    if (!hasAccess) {
+      return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
+    }
+
     // Create Sale and SaleItems in a transaction
     const sale = await prisma.sale.create({
       data: {
@@ -52,7 +91,7 @@ export async function POST(req: NextRequest) {
         status,
         notes,
         organizationId,
-        createdById,
+        createdById: session.user.id,
         storeId,
         counterId,
         items: {
@@ -79,6 +118,11 @@ export async function POST(req: NextRequest) {
 // --- GET SALES LIST (GET) ---
 export async function GET(req: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(req.url);
     const organizationId = searchParams.get("organizationId");
     const customerId = searchParams.get("customerId");
@@ -86,14 +130,20 @@ export async function GET(req: NextRequest) {
     const dateFrom = searchParams.get("dateFrom");
     const dateTo = searchParams.get("dateTo");
     const storeId = searchParams.get("storeId");
-    const counterId = searchParams.get("counterId"); // <-- Add this line
+    const counterId = searchParams.get("counterId");
+
+    // Access control: check user assignment
+    const hasAccess = await checkUserAccess(session.user.id, storeId || undefined, counterId || undefined);
+    if (!hasAccess) {
+      return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
+    }
 
     const where: any = {};
     if (organizationId) where.organizationId = organizationId;
     if (customerId) where.customerId = customerId;
     if (invoiceNumber) where.invoiceNumber = { contains: invoiceNumber };
-    if (storeId) where.storeId = storeId; // <-- Add this line
-    if (counterId) where.counterId = counterId; // <-- Add this line
+    if (storeId) where.storeId = storeId;
+    if (counterId) where.counterId = counterId;
     if (dateFrom || dateTo) {
       where.saleDate = {};
       if (dateFrom) where.saleDate.gte = new Date(dateFrom);
@@ -124,15 +174,27 @@ export async function GET(req: NextRequest) {
 // --- UPDATE SALE (PUT) ---
 export async function PUT(req: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
     const data = await req.json();
-    // Expected: { id, ...fieldsToUpdate, items }
-    const { id, items, ...fields } = data;
+    const { id, items, storeId, counterId, ...fields } = data;
+
+    // Access control: check user assignment
+    const hasAccess = await checkUserAccess(session.user.id, storeId, counterId);
+    if (!hasAccess) {
+      return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
+    }
 
     // Update sale and its items in a transaction
     const sale = await prisma.sale.update({
       where: { id },
       data: {
         ...fields,
+        storeId,
+        counterId,
         items: {
           deleteMany: {}, // Remove old items
           create: items.map((item: any) => ({
@@ -158,11 +220,23 @@ export async function PUT(req: NextRequest) {
 // --- DELETE SALE (DELETE) ---
 export async function DELETE(req: NextRequest) {
   try {
-    const { id } = await req.json();
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { id, storeId, counterId } = await req.json();
+
+    // Access control: check user assignment
+    const hasAccess = await checkUserAccess(session.user.id, storeId, counterId);
+    if (!hasAccess) {
+      return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
+    }
+
     await prisma.sale.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    return NextResponse.json({ success: false, error: errorMessage }, { status: 500});
-    }
+    return NextResponse.json({ success: false, error: errorMessage }, { status: 500 });
+  }
 }

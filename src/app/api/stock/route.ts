@@ -1,11 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@/generated/prisma';
+import { getServerSession } from "next-auth";
+import authOptions from '../auth/authOptions';
+
+// Utility function to check user access for store
+async function checkUserStoreAccess(userId: string, storeId?: string) {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw new Error("User not found");
+  if (user.role === "ADMIN") return true;
+  if (storeId) {
+    const storeAssigned = await prisma.userStore.findFirst({
+      where: { userId, storeId }
+    });
+    if (!storeAssigned) return false;
+  }
+  return true;
+}
 
 const prisma = new PrismaClient();
 
 export async function GET(req: NextRequest) {
+const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   const { searchParams } = new URL(req.url);
-  const action = searchParams.get('action');
+  const action = searchParams.get("action");
+  const storeId = searchParams.get("storeId");
+
+  // Access control for store actions
+  if (["inventory", "stock-ledger", "stock-transfer"].includes(action ?? "") && storeId) {
+    const hasAccess = await checkUserStoreAccess(session.user.id, storeId);
+    if (!hasAccess) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+  }
 
   try {
     switch (action) {
@@ -203,8 +232,19 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const body = await req.json();
-    const { action } = body;
+    const { action, storeId } = body;
+
+      if (["warehouse-create", "inventory-adjust", "stock-transfer"].includes(action)) {
+      const hasAccess = await checkUserStoreAccess(session.user.id, storeId);
+      if (!hasAccess) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+    }
 
     switch (action) {
       case 'warehouse-create': {
@@ -403,8 +443,20 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
+     const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const body = await req.json();
-    const { action } = body;
+    const { action, storeId } = body;
+
+    // Access control for store actions
+    if (["warehouse-update", "stock-transfer-update", "stock-adjustment-update"].includes(action) && storeId) {
+      const hasAccess = await checkUserStoreAccess(session.user.id, storeId);
+      if (!hasAccess) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+    }
 
     switch (action) {
       case 'warehouse-update': {
@@ -465,8 +517,20 @@ export async function PUT(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
+   const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const body = await req.json();
-    const { action } = body;
+    const { action, storeId } = body;
+
+    // Access control for store actions
+    if (["warehouse-delete", "stock-adjustment-delete", "stock-transfer-delete"].includes(action) && storeId) {
+      const hasAccess = await checkUserStoreAccess(session.user.id, storeId);
+      if (!hasAccess) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+    }
 
     switch (action) {
       case 'warehouse-delete': {

@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowsClockwise, ArrowsLeftRight, Plus } from "@phosphor-icons/react";
+import { useUser } from "@/context/UserContext";
 
 type Product = {
   id: string;
@@ -64,6 +65,7 @@ export default function StockTransferPage() {
   const [submitting, setSubmitting] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+  const { activeStore } = useUser();
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -73,27 +75,29 @@ export default function StockTransferPage() {
   }, []);
 
   useEffect(() => {
-    if (!organizationId) return;
+    if (!organizationId || !activeStore?.id) return;
     setLoading(true);
     Promise.all([
-      fetch(`/api/master/product?organizationId=${organizationId}`).then((r) =>
-        r.json()
-      ),
-      fetch(`/api/stock?action=warehouses&organizationId=${organizationId}`).then((r) =>
-        r.json()
-      ),
-      fetch(`/api/stock?action=stock-transfer&organizationId=${organizationId}`).then((r) =>
-        r.json()
-      ),
+      fetch(
+        `/api/master/product?organizationId=${organizationId}&storeId=${activeStore.id}`
+      ).then((r) => r.json()),
+      fetch(
+        `/api/stock?action=warehouses&organizationId=${organizationId}&storeId=${activeStore.id}`
+      ).then((r) => r.json()),
+      fetch(
+        `/api/stock?action=stock-transfer&organizationId=${organizationId}&storeId=${activeStore.id}`
+      ).then((r) => r.json()),
     ]).then(([products, warehouses, transfers]) => {
       setProducts(products);
       setWarehouses(warehouses);
       setTransfers(transfers);
       setLoading(false);
     });
-  }, [organizationId, submitting]);
+  }, [organizationId, activeStore, submitting]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
@@ -124,6 +128,7 @@ export default function StockTransferPage() {
         body: JSON.stringify({
           action: "stock-transfer",
           organizationId,
+          storeId: activeStore?.id, // <-- Add this line
           productId: form.productId,
           fromWarehouseId: form.fromWarehouseId,
           toWarehouseId: form.toWarehouseId,
@@ -147,10 +152,7 @@ export default function StockTransferPage() {
   };
 
   return (
-    <div
-      className="p-0 min-h-screen"
-    
-    >
+    <div className="p-0 min-h-screen">
       {/* Header */}
       <motion.div
         className="mb-6 flex items-center justify-between"
@@ -165,7 +167,11 @@ export default function StockTransferPage() {
           />
           <div className="flex items-center gap-2">
             {/* Transfer Icon */}
-            <ArrowsLeftRight size={32} weight="fill" className="text-[var(--color-primary)]" />
+            <ArrowsLeftRight
+              size={32}
+              weight="fill"
+              className="text-[var(--color-primary)]"
+            />
             <h1
               className="text-3xl font-bold tracking-tight drop-shadow"
               style={{
@@ -196,7 +202,10 @@ export default function StockTransferPage() {
           color: "var(--color-card-foreground)",
         }}
       >
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <form
+          onSubmit={handleSubmit}
+          className="grid grid-cols-1 md:grid-cols-2 gap-4"
+        >
           <div>
             <label className="block mb-1 text-sm font-medium">Product *</label>
             <select
@@ -220,7 +229,9 @@ export default function StockTransferPage() {
             </select>
           </div>
           <div>
-            <label className="block mb-1 text-sm font-medium">From Warehouse *</label>
+            <label className="block mb-1 text-sm font-medium">
+              From Warehouse *
+            </label>
             <select
               name="fromWarehouseId"
               value={form.fromWarehouseId}
@@ -242,7 +253,9 @@ export default function StockTransferPage() {
             </select>
           </div>
           <div>
-            <label className="block mb-1 text-sm font-medium">To Warehouse *</label>
+            <label className="block mb-1 text-sm font-medium">
+              To Warehouse *
+            </label>
             <select
               name="toWarehouseId"
               value={form.toWarehouseId}
@@ -281,7 +294,9 @@ export default function StockTransferPage() {
             />
           </div>
           <div className="md:col-span-2">
-            <label className="block mb-1 text-sm font-medium">Reason / Remarks</label>
+            <label className="block mb-1 text-sm font-medium">
+              Reason / Remarks
+            </label>
             <input
               type="text"
               name="reason"

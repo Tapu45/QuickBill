@@ -1,15 +1,45 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth";
+import authOptions from "../auth/authOptions";
+
+// Utility function to check user access for store
+async function checkUserStoreAccess(userId: string, storeId?: string) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new Error("User not found");
+    if (user.role === "ADMIN") return true;
+    if (storeId) {
+        const storeAssigned = await prisma.userStore.findFirst({
+            where: { userId, storeId }
+        });
+        if (!storeAssigned) return false;
+    }
+    return true;
+}
 
 // CREATE Purchase Order
 export async function POST(req: Request) {
     try {
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
         const body = await req.json();
-        const { action, organizationId } = body;
+        const { action, organizationId, storeId } = body;
 
         if (!organizationId) {
             return NextResponse.json({ error: "organizationId is required" }, { status: 400 });
         }
+        if (!storeId) {
+            return NextResponse.json({ error: "storeId is required" }, { status: 400 });
+        }
+
+        // Access control: check user assignment
+        const hasAccess = await checkUserStoreAccess(session.user.id, storeId);
+        if (!hasAccess) {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+
 
         // Create new purchase
         if (!action) {
@@ -60,7 +90,8 @@ export async function POST(req: Request) {
                             quantity: item.quantity,
                             rate: item.rate,
                             amount: item.amount,
-                            gstAmount: item.gstAmount
+                            gstAmount: item.gstAmount,
+                            warehouseId: item.warehouseId,
                         }))
                     }
                 },
@@ -112,7 +143,7 @@ export async function POST(req: Request) {
                         organizationId_productId_warehouseId: {
                             organizationId,
                             productId: item.productId,
-                            warehouseId: item.warehouseId || "default"
+                            warehouseId: item.warehouseId
                         }
                     },
                     create: {
@@ -149,11 +180,24 @@ export async function POST(req: Request) {
 // GET Purchase Orders
 export async function GET(req: Request) {
     try {
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
         const { searchParams } = new URL(req.url);
         const organizationId = searchParams.get("organizationId");
+        const storeId = searchParams.get("storeId");
+
         if (!organizationId) {
             return NextResponse.json({ error: "organizationId is required" }, { status: 400 });
         }
+        if (storeId) {
+            const hasAccess = await checkUserStoreAccess(session.user.id, storeId);
+            if (!hasAccess) {
+                return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+            }
+        }
+
         const action = searchParams.get("action");
 
         // Get single purchase by ID
@@ -181,6 +225,8 @@ export async function GET(req: Request) {
         const supplierId = searchParams.get("supplierId");
 
         let where: any = { organizationId };
+
+        if (storeId) where.storeId = storeId; // <-- Add this line
 
         if (status) where.status = status;
         if (supplierId) where.supplierId = supplierId;
@@ -220,11 +266,23 @@ export async function GET(req: Request) {
 // UPDATE Purchase Order
 export async function PUT(req: Request) {
     try {
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
         const body = await req.json();
-        const { id, organizationId, ...updateData } = body;
+        const { id, organizationId, storeId, ...updateData } = body;
 
         if (!organizationId) {
             return NextResponse.json({ error: "organizationId is required" }, { status: 400 });
+        }
+        if (!storeId) {
+            return NextResponse.json({ error: "storeId is required" }, { status: 400 });
+        }
+
+        const hasAccess = await checkUserStoreAccess(session.user.id, storeId);
+        if (!hasAccess) {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 
         // Can only update if status is PENDING
@@ -239,23 +297,28 @@ export async function PUT(req: Request) {
             );
         }
 
-        // Update purchase and items
+        // Only update items if provided
+        let updatePayload: any = {
+            ...updateData,
+            purchaseDate: updateData.purchaseDate ? new Date(updateData.purchaseDate) : undefined,
+        };
+
+        if (updateData.items && Array.isArray(updateData.items)) {
+            updatePayload.items = {
+                deleteMany: {},
+                create: updateData.items.map((item: any) => ({
+                    productId: item.productId,
+                    quantity: item.quantity,
+                    rate: item.rate,
+                    amount: item.amount,
+                    gstAmount: item.gstAmount
+                }))
+            };
+        }
+
         const purchase = await prisma.purchase.update({
             where: { id },
-            data: {
-                ...updateData,
-                purchaseDate: new Date(updateData.purchaseDate),
-                items: {
-                    deleteMany: {},
-                    create: updateData.items.map((item: any) => ({
-                        productId: item.productId,
-                        quantity: item.quantity,
-                        rate: item.rate,
-                        amount: item.amount,
-                        gstAmount: item.gstAmount
-                    }))
-                }
-            },
+            data: updatePayload,
             include: {
                 items: true,
                 supplier: true
@@ -276,9 +339,27 @@ export async function PUT(req: Request) {
 // DELETE Purchase Order
 export async function DELETE(req: Request) {
     try {
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
         const { searchParams } = new URL(req.url);
         const id = searchParams.get("id");
         const organizationId = searchParams.get("organizationId");
+        const storeId = searchParams.get("storeId");
+
+        if (!id || !organizationId || !storeId) {
+            return NextResponse.json(
+                { error: "Purchase ID, organizationId, and storeId are required" },
+                { status: 400 }
+            );
+        }
+
+        const hasAccess = await checkUserStoreAccess(session.user.id, storeId);
+        if (!hasAccess) {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+
 
         if (!id || !organizationId) {
             return NextResponse.json(

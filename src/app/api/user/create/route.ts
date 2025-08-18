@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "../../../../lib/prisma";
 import bcrypt from "bcryptjs";
+import { sendOnboardingEmail, sendAssignmentNotification, generateUserPassword } from "@/utils/email";
 
 // RBAC roles
 const ROLES = ["ADMIN", "MANAGER", "CASHIER", "SALESPERSON"];
@@ -51,6 +52,8 @@ export async function POST(req: Request) {
           isActive: true,
         }
       });
+
+
       return NextResponse.json({ message: "User created", user: maskUser(user) }, { status: 201 });
     }
 
@@ -116,6 +119,86 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Role assigned", user: maskUser(user) }, { status: 200 });
     }
 
+    if (action === "assignStore") {
+      const { userId, storeIds } = body;
+      if (!userId || !storeIds || !Array.isArray(storeIds) || storeIds.length === 0) {
+        return NextResponse.json({ error: "userId and storeIds[] required" }, { status: 400 });
+      }
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      if (!user) {
+        return NextResponse.json({ error: "User not found" }, { status: 404 });
+      }
+      await Promise.all(
+        storeIds.map((storeId: string) =>
+          prisma.userStore.upsert({
+            where: { userId_storeId: { userId, storeId } },
+            update: {},
+            create: { userId, storeId }
+          })
+        )
+      );
+      // Get organization name for email (optional)
+      const org = await prisma.organization.findUnique({ where: { id: user.organizationId ?? undefined } });
+      const storeRecords = await prisma.store.findMany({ where: { id: { in: storeIds } } });
+      const storeNames = storeRecords.map(s => s.name);
+
+      await sendAssignmentNotification(user.email, storeNames, org?.name || "Your Organization");
+      return NextResponse.json({ message: "Store(s) assigned to user", user: maskUser(user) }, { status: 200 });
+    }
+
+    if (action === "assignUser") {
+      const { email, storeId, organizationId, role } = body;
+      if (!email || !storeId || !organizationId) {
+        return NextResponse.json({ error: "email, storeId, and organizationId required" }, { status: 400 });
+      }
+      let user = await prisma.user.findFirst({ where: { email, organizationId } });
+      let isNewUser = false;
+      let tempPassword = "";
+      if (!user) {
+        // Use user's first name or email prefix if available
+        const userName = body.firstName || email.split("@")[0];
+        const store = await prisma.store.findUnique({ where: { id: storeId } });
+        const storeName = store?.name || "store";
+        const tempPassword = generateUserPassword(userName, storeName);
+        const hashedPassword = await bcrypt.hash(tempPassword, 10);
+        // Fetch organization for onboarding email
+        const org = await prisma.organization.findUnique({ where: { id: organizationId } });
+        user = await prisma.user.create({
+          data: {
+            email,
+            username: email,
+            password: hashedPassword,
+            firstName: body.firstName || "",
+            lastName: body.lastName || "",
+            role: isValidRole(role) ? role : "MANAGER",
+            organizationId,
+            isActive: true,
+          }
+        });
+        isNewUser = true;
+        // Send onboarding email with tempPassword
+        await sendOnboardingEmail(email, tempPassword, org?.name || "Your Organization");
+      }
+      // Assign store
+      await prisma.userStore.upsert({
+        where: { userId_storeId: { userId: user.id, storeId } },
+        update: {},
+        create: { userId: user.id, storeId }
+      });
+      if (!isNewUser) {
+        const storeRecord = await prisma.store.findUnique({ where: { id: storeId } });
+        const org = await prisma.organization.findUnique({ where: { id: organizationId } });
+        await sendAssignmentNotification(email, [storeRecord?.name || "Assigned Store"], org?.name || "Your Organization");
+      }
+      return NextResponse.json({
+        message: isNewUser
+          ? "User created and assigned to store"
+          : "User assigned to store",
+        user: maskUser(user),
+        tempPassword: isNewUser ? tempPassword : undefined // Only return tempPassword for new user
+      }, { status: 200 });
+    }
+
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   } catch (error) {
     return NextResponse.json({ error: "User management failed", details: error }, { status: 500 });
@@ -147,7 +230,15 @@ export async function GET(req: Request) {
       if (!user) {
         return NextResponse.json({ error: "User not found" }, { status: 404 });
       }
-      return NextResponse.json({ user: maskUser(user) }, { status: 200 });
+      const stores = await prisma.userStore.findMany({
+        where: { userId: user.id },
+        include: { store: true },
+      });
+      const counters = await prisma.userCounter.findMany({
+        where: { userId: user.id },
+        include: { counter: true },
+      });
+      return NextResponse.json({ user: maskUser(user), stores, counters }, { status: 200 });
     }
 
     // Get roles

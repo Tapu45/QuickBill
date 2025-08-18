@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Sale } from "@/types/Sales";
 import { printSaleDetails, printSalesTable } from "@/utils/print";
+import { useUser } from "@/context/UserContext";
 
 export default function SalesHistoryPage() {
   const [sales, setSales] = useState<Sale[]>([]);
@@ -15,6 +16,7 @@ export default function SalesHistoryPage() {
   const [invoiceSearch, setInvoiceSearch] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const { activeStore, activeCounter } = useUser();
 
   const handlePrintTable = async () => {
     if (typeof window === "undefined") return;
@@ -36,32 +38,34 @@ export default function SalesHistoryPage() {
 }, []);
 
   useEffect(() => {
-    if (!organizationId) return;
-    async function fetchSales() {
-      setLoading(true);
-      setError(null);
-      try {
-        const params = new URLSearchParams();
-        params.append("organizationId", organizationId!);
-        if (invoiceSearch) params.append("invoiceNumber", invoiceSearch);
-        if (dateFrom) params.append("dateFrom", dateFrom);
-        if (dateTo) params.append("dateTo", dateTo);
+  if (!organizationId || !activeStore?.id || !activeCounter?.id) return;
+  async function fetchSales() {
+    setLoading(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams();
+      params.append("organizationId", organizationId!);
+      if (activeStore?.id) params.append("storeId", activeStore.id);         // <-- Add this
+      if (activeCounter?.id) params.append("counterId", activeCounter.id);     // <-- And this
+      if (invoiceSearch) params.append("invoiceNumber", invoiceSearch);
+      if (dateFrom) params.append("dateFrom", dateFrom);
+      if (dateTo) params.append("dateTo", dateTo);
 
-        const res = await fetch(`/api/sales?${params.toString()}`);
-        const data = await res.json();
-        if (data.success) {
-          setSales(data.sales);
-        } else {
-          setError(data.error || "Failed to fetch sales");
-        }
-      } catch (err: any) {
-        setError(err.message || "Failed to fetch sales");
-      } finally {
-        setLoading(false);
+      const res = await fetch(`/api/sales?${params.toString()}`);
+      const data = await res.json();
+      if (data.success) {
+        setSales(data.sales);
+      } else {
+        setError(data.error || "Failed to fetch sales");
       }
+    } catch (err: any) {
+      setError(err.message || "Failed to fetch sales");
+    } finally {
+      setLoading(false);
     }
-    fetchSales();
-  }, [organizationId, invoiceSearch, dateFrom, dateTo]);
+  }
+  fetchSales();
+}, [organizationId, activeStore, activeCounter, invoiceSearch, dateFrom, dateTo]);
 
   return (
     <div

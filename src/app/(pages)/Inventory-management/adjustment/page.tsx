@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Plus, ArrowsClockwise } from "@phosphor-icons/react";
+import { useUser } from "@/context/UserContext";
 
 type Product = {
   id: string;
@@ -70,6 +71,7 @@ export default function StockAdjustmentPage() {
   const [submitting, setSubmitting] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+  const { activeStore } = useUser();
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -79,27 +81,29 @@ export default function StockAdjustmentPage() {
   }, []);
 
   useEffect(() => {
-    if (!organizationId) return;
+    if (!organizationId || !activeStore?.id) return;
     setLoading(true);
     Promise.all([
-      fetch(`/api/master/product?organizationId=${organizationId}`).then((r) =>
-        r.json()
-      ),
-      fetch(`/api/stock?action=warehouses&organizationId=${organizationId}`).then((r) =>
-        r.json()
-      ),
-      fetch(`/api/stock?action=stock-adjustments&organizationId=${organizationId}`).then((r) =>
-        r.json()
-      ),
+      fetch(
+        `/api/master/product?organizationId=${organizationId}&storeId=${activeStore.id}`
+      ).then((r) => r.json()),
+      fetch(
+        `/api/stock?action=warehouses&organizationId=${organizationId}&storeId=${activeStore.id}`
+      ).then((r) => r.json()),
+      fetch(
+        `/api/stock?action=stock-adjustments&organizationId=${organizationId}&storeId=${activeStore.id}`
+      ).then((r) => r.json()),
     ]).then(([products, warehouses, adjustments]) => {
       setProducts(products);
       setWarehouses(warehouses);
       setAdjustments(adjustments);
       setLoading(false);
     });
-  }, [organizationId, submitting]);
+  }, [organizationId, activeStore, submitting]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
@@ -125,6 +129,7 @@ export default function StockAdjustmentPage() {
         body: JSON.stringify({
           action: "inventory-adjust",
           organizationId,
+          storeId: activeStore?.id, 
           productId: form.productId,
           warehouseId: form.warehouseId,
           quantity: Number(form.quantity),
@@ -148,10 +153,7 @@ export default function StockAdjustmentPage() {
   };
 
   return (
-    <div
-      className="p-0 min-h-screen"
-     
-    >
+    <div className="p-0 min-h-screen">
       {/* Header */}
       <motion.div
         className="mb-6 flex items-center justify-between"
@@ -174,8 +176,23 @@ export default function StockAdjustmentPage() {
               className="text-[var(--color-primary)]"
               style={{ display: "inline" }}
             >
-              <rect x="3" y="7" width="18" height="13" rx="2" fill="currentColor" />
-              <rect x="7" y="3" width="10" height="4" rx="1" fill="currentColor" opacity="0.7" />
+              <rect
+                x="3"
+                y="7"
+                width="18"
+                height="13"
+                rx="2"
+                fill="currentColor"
+              />
+              <rect
+                x="7"
+                y="3"
+                width="10"
+                height="4"
+                rx="1"
+                fill="currentColor"
+                opacity="0.7"
+              />
             </svg>
             <h1
               className="text-3xl font-bold tracking-tight drop-shadow"
@@ -190,7 +207,8 @@ export default function StockAdjustmentPage() {
         </div>
         <div className="hidden md:block">
           <p className="text-muted-foreground text-base mt-2">
-            Manually adjust inventory for corrections, damages, or found/lost stock.
+            Manually adjust inventory for corrections, damages, or found/lost
+            stock.
           </p>
         </div>
       </motion.div>
@@ -207,7 +225,10 @@ export default function StockAdjustmentPage() {
           color: "var(--color-card-foreground)",
         }}
       >
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <form
+          onSubmit={handleSubmit}
+          className="grid grid-cols-1 md:grid-cols-2 gap-4"
+        >
           <div>
             <label className="block mb-1 text-sm font-medium">Product *</label>
             <select
@@ -231,7 +252,9 @@ export default function StockAdjustmentPage() {
             </select>
           </div>
           <div>
-            <label className="block mb-1 text-sm font-medium">Warehouse *</label>
+            <label className="block mb-1 text-sm font-medium">
+              Warehouse *
+            </label>
             <select
               name="warehouseId"
               value={form.warehouseId}
@@ -253,7 +276,9 @@ export default function StockAdjustmentPage() {
             </select>
           </div>
           <div>
-            <label className="block mb-1 text-sm font-medium">Adjustment Type *</label>
+            <label className="block mb-1 text-sm font-medium">
+              Adjustment Type *
+            </label>
             <select
               name="adjustmentType"
               value={form.adjustmentType}
@@ -292,7 +317,9 @@ export default function StockAdjustmentPage() {
             />
           </div>
           <div className="md:col-span-2">
-            <label className="block mb-1 text-sm font-medium">Reason / Remarks</label>
+            <label className="block mb-1 text-sm font-medium">
+              Reason / Remarks
+            </label>
             <input
               type="text"
               name="reason"
@@ -403,9 +430,12 @@ export default function StockAdjustmentPage() {
                         className="px-2 py-1 text-xs rounded-full"
                         style={{
                           backgroundColor:
-                            item.adjustmentType === "INCREASE" || item.adjustmentType === "FOUND"
+                            item.adjustmentType === "INCREASE" ||
+                            item.adjustmentType === "FOUND"
                               ? "var(--color-chart-3)"
-                              : item.adjustmentType === "DECREASE" || item.adjustmentType === "DAMAGE" || item.adjustmentType === "THEFT"
+                              : item.adjustmentType === "DECREASE" ||
+                                item.adjustmentType === "DAMAGE" ||
+                                item.adjustmentType === "THEFT"
                               ? "var(--color-destructive)"
                               : "var(--color-chart-4)",
                           color: "var(--color-primary-foreground)",

@@ -13,7 +13,7 @@ export async function GET(req: Request) {
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
     include: {
-      organization: true, // fetch all org details
+      organization: true,
     },
   });
 
@@ -21,5 +21,20 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  return NextResponse.json(user);
+  // Fetch assigned stores and counters
+  const stores = await prisma.userStore.findMany({
+    where: { userId: user.id },
+    include: { store: true },
+  });
+
+  const counters = await prisma.userCounter.findMany({
+    where: { userId: user.id },
+    include: { counter: true },
+  });
+
+  return NextResponse.json({
+    ...user,
+    stores,
+    counters,
+  });
 }

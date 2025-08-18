@@ -200,6 +200,47 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
+       {/* Assigned Stores */}
+      <div className="mb-10">
+        <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+          <Buildings size={22} className="text-[var(--color-primary)]" /> Assigned Stores
+        </h3>
+        {user.stores && user.stores.length > 0 ? (
+          <ul className="list-disc ml-6">
+            {user.stores.map((storeObj: any) => (
+              <li key={storeObj.store.id} className="mb-2">
+                <span className="font-semibold">{storeObj.store.name}</span>
+                {storeObj.store.address && (
+                  <span className="ml-2 text-gray-500">({storeObj.store.address})</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className="text-gray-500">No stores assigned.</div>
+        )}
+      </div>
+
+      {/* Assigned Counters */}
+      <div className="mb-10">
+        <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+          <Buildings size={22} className="text-[var(--color-primary)]" /> Assigned Counters
+        </h3>
+        {user.counters && user.counters.length > 0 ? (
+          <ul className="list-disc ml-6">
+            {user.counters.map((counterObj: any) => (
+              <li key={counterObj.counter.id} className="mb-2">
+                <span className="font-semibold">{counterObj.counter.name}</span>
+                {counterObj.counter.storeId && (
+                  <span className="ml-2 text-gray-500">Store ID: {counterObj.counter.storeId}</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className="text-gray-500">No counters assigned.</div>
+        )}
+      </div>
     </div>
   );
 }

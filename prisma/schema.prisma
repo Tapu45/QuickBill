@@ -291,6 +291,7 @@ model PurchaseItem {
   rate        Float
   amount      Float
   gstAmount   Float
+  warehouseId String 
   createdAt   DateTime @default(now())
 
   @@map("purchase_items")

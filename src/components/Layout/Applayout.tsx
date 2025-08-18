@@ -13,8 +13,11 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   const pathname = usePathname();
-  const showAppLayout = pathname !== "/" && !pathname.startsWith("/auth") &&
-  pathname !== "/organization/create" &&  !pathname.startsWith("/user")
+ const showAppLayout =
+  pathname !== "/" &&
+  !pathname.startsWith("/auth") &&
+  pathname !== "/organization/create" &&
+  pathname !== "/user";
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const toggleSidebar = () => {

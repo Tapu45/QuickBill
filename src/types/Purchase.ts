@@ -8,6 +8,7 @@ export type PurchaseItem = {
 };
 
 export type PurchaseOrder = {
+  storeId: string;
   id: string;
   invoiceNumber: string;
   supplierInvoiceNumber: string;

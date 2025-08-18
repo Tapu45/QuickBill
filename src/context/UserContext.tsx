@@ -62,15 +62,21 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
           if (data.role === "ADMIN") {
             // Admin: fetch all stores and counters in organization
-            const storesRes = await fetch(`/api/store?organizationId=${data.organizationId}`);
+            const storesRes = await fetch(
+              `/api/store?action=getStores&organizationId=${data.organizationId}`
+            );
             stores = await storesRes.json();
-            const countersRes = await fetch(`/api/counter?organizationId=${data.organizationId}`);
+            const countersRes = await fetch(
+              `/api/counter?action=getCounters&organizationId=${data.organizationId}`
+            );
             counters = await countersRes.json();
           } else {
             // Non-admin: fetch only assigned stores/counters
             const storesRes = await fetch(`/api/user/stores?userId=${data.id}`);
             stores = await storesRes.json();
-            const countersRes = await fetch(`/api/user/counters?userId=${data.id}`);
+            const countersRes = await fetch(
+              `/api/user/counters?userId=${data.id}`
+            );
             counters = await countersRes.json();
           }
 
@@ -125,9 +131,5 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     loading,
   };
 
-  return (
-    <UserContext.Provider value={value}>
-      {children}
-    </UserContext.Provider>
-  );
+  return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
 };
