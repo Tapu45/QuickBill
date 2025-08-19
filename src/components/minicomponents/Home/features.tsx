@@ -22,271 +22,161 @@ import {
 
 const features = [
   {
-    icon: <Lightning size={40} weight="fill" color="var(--primary)" />,
+    icon: <Lightning size={36} weight="fill" color="var(--primary)" />,
     title: "Easy Invoicing",
-    description: "Create and send invoices in seconds with a streamlined, intuitive interface. Customize your invoices and automate recurring billing.",
-    bg: "var(--secondary)",
+    description:
+      "Create and send invoices in seconds with a streamlined, intuitive interface. Customize your invoices and automate recurring billing.",
   },
   {
-    icon: <CurrencyDollar size={40} weight="fill" color="var(--chart-2)" />,
+    icon: <CurrencyDollar size={36} weight="fill" color="var(--chart-2)" />,
     title: "Track Payments",
-    description: "Monitor payments in real-time, send reminders, and get paid faster. Stay on top of your cash flow with smart notifications.",
-    bg: "var(--accent)",
+    description:
+      "Monitor payments in real-time, send reminders, and get paid faster. Stay on top of your cash flow with smart notifications.",
   },
   {
-    icon: <ChartBar size={40} weight="fill" color="var(--chart-1)" />,
+    icon: <ChartBar size={36} weight="fill" color="var(--chart-1)" />,
     title: "Analytics",
-    description: "Gain insights with real-time analytics. Visualize revenue, outstanding invoices, and customer trends with beautiful charts.",
-    bg: "var(--muted)",
+    description:
+      "Gain insights with real-time analytics. Visualize revenue, outstanding invoices, and customer trends with beautiful charts.",
   },
   {
-    icon: <Users size={40} weight="fill" color="var(--sidebar-primary)" />,
+    icon: <Users size={36} weight="fill" color="var(--sidebar-primary)" />,
     title: "Role-Based Access",
-    description: "Secure your data with role-based access control for Admin, Cashier, Manager, and Salesperson. Track login history for all users.",
-    bg: "var(--sidebar-accent)",
+    description:
+      "Secure your data with role-based access control for Admin, Cashier, Manager, and Salesperson.",
   },
   {
-    icon: <ArchiveBox size={40} weight="fill" color="var(--primary)" />,
+    icon: <ArchiveBox size={36} weight="fill" color="var(--primary)" />,
     title: "Inventory Management",
-    description: "Automatic stock updates, manual adjustments, multi-location warehouse support, and reorder level alerts to prevent stockouts.",
-    bg: "var(--secondary)",
+    description:
+      "Automatic stock updates, multi-location support, and reorder alerts to prevent stockouts.",
   },
   {
-    icon: <Receipt size={40} weight="fill" color="var(--chart-2)" />,
+    icon: <Receipt size={36} weight="fill" color="var(--chart-2)" />,
     title: "GST-Compliant Billing",
-    description: "Generate GST-compliant invoices with auto-calculated CGST, SGST, IGST, and HSN code management. Ready for GSTR-1 and GSTR-3B.",
-    bg: "var(--accent)",
+    description:
+      "Generate GST-compliant invoices with auto-calculated taxes and HSN code management.",
   },
   {
-    icon: <ShieldCheck size={40} weight="fill" color="var(--chart-1)" />,
+    icon: <ShieldCheck size={36} weight="fill" color="var(--chart-1)" />,
     title: "Secure & Reliable",
-    description: "Data encryption, secure login, and regular backups ensure your business data is always safe and available.",
-    bg: "var(--muted)",
+    description:
+      "Data encryption, secure login, and regular backups ensure your business data is safe.",
   },
   {
-    icon: <FileText size={40} weight="fill" color="var(--sidebar-primary)" />,
+    icon: <FileText size={36} weight="fill" color="var(--sidebar-primary)" />,
     title: "Customizable Documents",
-    description: "Personalize invoice formats (A4/POS), add your logo, terms, and QR codes. Configure quotations and delivery challans.",
-    bg: "var(--sidebar-accent)",
+    description:
+      "Personalize invoice formats (A4/POS), add logos, terms, and QR codes.",
   },
   {
-    icon: <Warehouse size={40} weight="fill" color="var(--primary)" />,
+    icon: <Warehouse size={36} weight="fill" color="var(--primary)" />,
     title: "Multi-Warehouse Support",
-    description: "Manage inventory across multiple warehouses or locations, with real-time stock visibility and transfer options.",
-    bg: "var(--secondary)",
+    description:
+      "Manage inventory across multiple warehouses with real-time visibility.",
   },
   {
-    icon: <Calculator size={40} weight="fill" color="var(--chart-2)" />,
+    icon: <Calculator size={36} weight="fill" color="var(--chart-2)" />,
     title: "Tile Area Calculator",
-    description: "Built-in area calculator, box-to-sqft converter, and wastage estimator for tile showrooms and similar businesses.",
-    bg: "var(--accent)",
+    description:
+      "Built-in area calculator, box-to-sqft converter, and wastage estimator.",
   },
   {
-    icon: <QrCode size={40} weight="fill" color="var(--chart-1)" />,
+    icon: <QrCode size={36} weight="fill" color="var(--chart-1)" />,
     title: "E-Invoice & QR Code",
-    description: "Generate e-invoices with QR codes for easy verification and compliance with government regulations.",
-    bg: "var(--muted)",
+    description:
+      "Generate e-invoices with QR codes for easy verification and compliance.",
   },
   {
-    icon: <TrendUp size={40} weight="fill" color="var(--sidebar-primary)" />,
+    icon: <TrendUp size={36} weight="fill" color="var(--sidebar-primary)" />,
     title: "Advanced Reporting",
-    description: "Comprehensive sales, purchase, stock, and customer outstanding reports. Day-end summaries and stock valuation.",
-    bg: "var(--sidebar-accent)",
+    description:
+      "Comprehensive sales, purchase, stock, and outstanding reports.",
   },
   {
-    icon: <ClipboardText size={40} weight="fill" color="var(--primary)" />,
+    icon: <ClipboardText size={36} weight="fill" color="var(--primary)" />,
     title: "Customer & Supplier Ledger",
-    description: "Track all transactions, outstanding balances, and payment history for customers and suppliers.",
-    bg: "var(--secondary)",
+    description:
+      "Track transactions, outstanding balances, and payment history.",
   },
   {
-    icon: <BookOpen size={40} weight="fill" color="var(--chart-2)" />,
+    icon: <BookOpen size={36} weight="fill" color="var(--chart-2)" />,
     title: "Accounts & Ledger",
-    description: "Manage receipts, payments, daily cash book, expenses, and bank transactions with ease.",
-    bg: "var(--accent)",
+    description:
+      "Manage receipts, payments, cash book, expenses, and bank transactions.",
   },
   {
-    icon: <Bank size={40} weight="fill" color="var(--chart-1)" />,
+    icon: <Bank size={36} weight="fill" color="var(--chart-1)" />,
     title: "Bank & UPI Integration",
-    description: "Record and reconcile bank, cheque, and UPI transactions for seamless accounting.",
-    bg: "var(--muted)",
+    description:
+      "Record and reconcile bank, cheque, and UPI transactions for accounting.",
   },
   {
-    icon: <Barcode size={40} weight="fill" color="var(--sidebar-primary)" />,
+    icon: <Barcode size={36} weight="fill" color="var(--sidebar-primary)" />,
     title: "Barcode & RFID Ready",
-    description: "Future-ready with barcode and RFID integration for fast billing and inventory management.",
-    bg: "var(--sidebar-accent)",
+    description:
+      "Future-ready with barcode and RFID integration for fast billing.",
   },
 ];
 
 const containerVariants = {
-  hidden: { opacity: 0, y: 40 },
+  hidden: { opacity: 0, y: 16 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { staggerChildren: 0.12, delayChildren: 0.15 },
+    transition: { staggerChildren: 0.08, delayChildren: 0.12 },
   },
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 40 },
-  visible: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 80 } },
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 90 } },
 };
 
 const FeaturesSection: React.FC = () => (
-  <section
-    className="features-section"
-    style={{
-      background: "var(--background)",
-      padding: "4rem 0 6rem 0",
-      minHeight: "100vh",
-      position: "relative",
-      overflow: "hidden",
-    }}
-  >
-    {/* Decorative background gradients */}
-    <div
-      style={{
-        position: "absolute",
-        top: "-120px",
-        left: "-120px",
-        width: "340px",
-        height: "340px",
-        background: "",
-        opacity: 0.12,
-        zIndex: 0,
-        pointerEvents: "none",
-      }}
-    />
-    <div
-      style={{
-        position: "absolute",
-        bottom: "-100px",
-        right: "-100px",
-        width: "300px",
-        height: "300px",
-        background: "",
-        opacity: 0.10,
-        zIndex: 0,
-        pointerEvents: "none",
-      }}
-    />
+  <section className="relative overflow-hidden bg-background py-10 md:py-12">
+    <div className="absolute -top-24 -left-24 w-80 h-80 rounded-full bg-gradient-to-br from-primary/10 to-transparent opacity-20 pointer-events-none" />
+    <div className="absolute -bottom-20 -right-20 w-72 h-72 rounded-full bg-gradient-to-tr from-accent/10 to-transparent opacity-16 pointer-events-none" />
+
     <motion.div
-      initial={{ opacity: 0, y: -30 }}
+      initial={{ opacity: 0, y: -18 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.7, type: "spring" }}
-      className="mx-auto max-w-2xl text-center relative z-10"
+      transition={{ duration: 0.6, type: "spring" }}
+      className="mx-auto max-w-2xl text-center px-4 sm:px-6 relative z-10"
     >
-      <h2
-        style={{
-          color: "var(--primary)",
-          fontSize: "2.7rem",
-          fontWeight: 800,
-          letterSpacing: "-0.02em",
-          marginBottom: "1rem",
-          fontFamily: "var(--font-sans)",
-        }}
-      >
+      <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-primary leading-tight mb-3">
         Powerful Features for Every Business
       </h2>
-      <p
-        style={{
-          color: "var(--muted-foreground)",
-          fontSize: "1.25rem",
-          marginBottom: "2.5rem",
-          fontWeight: 500,
-        }}
-      >
-        Universal Billing Software designed for tile showrooms, retail, and more. <br />
-        <span style={{ color: "var(--sidebar-primary)", fontWeight: 600 }}>
+      <p className="text-sm sm:text-base text-muted-foreground font-medium mb-8">
+        Universal Billing Software designed for tile showrooms, retail, and more.
+        <span className="block text-sidebar-primary font-semibold mt-2">
           GST-ready, scalable, and beautifully integrated.
         </span>
       </p>
     </motion.div>
-        <motion.div
-      className="features-list grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto relative z-10"
+
+    <motion.div
+      className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 max-w-7xl mx-auto px-4 sm:px-6 z-10"
       variants={containerVariants}
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, amount: 0.2 }}
     >
       {features.map((feature, idx) => (
-               <motion.div
+        <motion.div
           key={idx}
           variants={itemVariants}
-          whileHover={{
-            scale: 1.045,
-            boxShadow: "0 8px 32px 0 var(--shadow-lg)",
-            y: -6,
-          }}
-          style={{
-            background: "var(--card)",
-            borderRadius: "var(--radius-xl)",
-            boxShadow: "var(--shadow-md)",
-            padding: "1.2rem 0.7rem",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            minHeight: "180px",
-            border: "1px solid var(--border)",
-            transition: "box-shadow 0.2s, transform 0.2s",
-            position: "relative",
-            overflow: "hidden",
-          }}
+          whileHover={{ scale: 1.03 }}
+          className="relative bg-card border border-border rounded-2xl p-5 flex flex-col items-center text-center transition-transform duration-200 hover:shadow-lg"
         >
-          {/* Subtle icon background */}
-          <div
-            style={{
-              position: "absolute",
-              top: "18px",
-              right: "18px",
-              width: "48px",
-              height: "48px",
-              background: "radial-gradient(circle, var(--primary) 60%, transparent 100%)",
-              opacity: 0.08,
-              zIndex: 1,
-              borderRadius: "50%",
-            }}
-          />
-          <div
-            style={{
-              background: "var(--card)",
-              borderRadius: "50%",
-              padding: "0.7rem",
-              marginBottom: "1rem",
-              boxShadow: "var(--shadow-xs)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              zIndex: 2,
-            }}
-          >
+          <div className="absolute top-4 right-4 w-10 h-10 rounded-full opacity-10 bg-primary/30 pointer-events-none" />
+          <div className="bg-card shadow-sm rounded-full p-3 mb-4 flex items-center justify-center">
             {feature.icon}
           </div>
-          <h3
-            style={{
-              color: "var(--card-foreground)",
-              fontSize: "1.1rem",
-              fontWeight: 700,
-              marginBottom: "0.5rem",
-              textAlign: "center",
-              fontFamily: "var(--font-sans)",
-              zIndex: 2,
-            }}
-          >
+          <h3 className="text-base sm:text-lg font-semibold text-card-foreground mb-2">
             {feature.title}
           </h3>
-          <p
-            style={{
-              color: "var(--muted-foreground)",
-              fontSize: "0.95rem",
-              textAlign: "center",
-              lineHeight: 1.5,
-              zIndex: 2,
-            }}
-          >
-            {feature.description}
-          </p>
+          <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
         </motion.div>
       ))}
     </motion.div>

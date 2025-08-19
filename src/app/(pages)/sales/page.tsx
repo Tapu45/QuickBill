@@ -85,9 +85,6 @@ export default function SalesPage() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const suggestionsRef = useRef<HTMLUListElement>(null);
   const { activeStore, activeCounter, loading } = useUser();
-  
-
-  
 
   useEffect(() => {
     setProductQueries(
@@ -387,7 +384,7 @@ export default function SalesPage() {
       notes: "",
       organizationId: orgId,
       createdById: user?.user?.id,
-      storeId: activeStore?.id,      // <-- Add this
+      storeId: activeStore?.id, // <-- Add this
       counterId: activeCounter?.id,
     };
     try {
@@ -466,18 +463,17 @@ export default function SalesPage() {
     return value.replace(/^0+(?=\d)/, "");
   }
 
- return (
-    <div className="container mx-auto p-1 space-y-8">
+  return (
+    <div className="container mx-auto px-2 sm:px-4 py-2 space-y-8">
       <div className="rounded-lg p-1">
         {/* Header Section */}
-        <div className="mb-6 flex items-center gap-3 justify-between">
+        <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-3 justify-between">
           <div className="flex items-center gap-3">
             <div
               className="w-2 h-10 rounded bg-[var(--color-primary)] shadow"
               aria-hidden="true"
             />
             <div className="flex items-center gap-2">
-              {/* Invoice Icon */}
               <svg
                 width="32"
                 height="32"
@@ -503,7 +499,7 @@ export default function SalesPage() {
                 />
               </svg>
               <h2
-                className="text-3xl font-bold tracking-tight drop-shadow"
+                className="text-2xl sm:text-3xl font-bold tracking-tight drop-shadow"
                 style={{
                   color: "var(--color-card-foreground)",
                   letterSpacing: "-0.02em",
@@ -514,17 +510,12 @@ export default function SalesPage() {
             </div>
           </div>
           {/* Sales History Button */}
-        <Link
+          <Link
             href="/sales/history"
-            className="ml-auto px-5 py-2 rounded-xl font-semibold transition-colors border shadow
-              bg-[var(--color-primary)] text-[var(--color-primary-foreground)]
-              hover:bg-[var(--color-primary)]/90 hover:shadow-lg
-              focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "0.5rem",
-            }}
+            className="mt-3 sm:mt-0 ml-auto px-4 py-2 rounded-xl font-semibold transition-colors border shadow
+            bg-[var(--color-primary)] text-[var(--color-primary-foreground)]
+            hover:bg-[var(--color-primary)]/90 hover:shadow-lg
+            focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 flex items-center gap-2"
           >
             <svg
               width="20"
@@ -707,173 +698,175 @@ export default function SalesPage() {
           </div>
 
           {/* Product Entry Section */}
-          <table className="w-full text-sm mb-2 border-separate border-spacing-y-2">
-            <thead>
-              <tr className="bg-muted">
-                <th className="text-left px-3 py-2 font-semibold">Product</th>
-                <th className="text-center px-3 py-2 font-semibold">Qty</th>
-                <th className="text-center px-3 py-2 font-semibold">Rate</th>
-                <th className="text-center px-3 py-2 font-semibold">
-                  Discount
-                </th>
-                <th className="text-center px-3 py-2 font-semibold">GST %</th>
-                <th className="text-right px-3 py-2 font-semibold">Amount</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((item, idx) => (
-                <tr key={idx} className="align-middle bg-card rounded-lg">
-                  <td className="relative min-w-[220px] px-3 py-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-gray-400">
-                        <svg
-                          width="18"
-                          height="18"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            d="M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm7-1-3.5-3.5"
-                          />
-                        </svg>
-                      </span>
-                      <input
-                        type="text"
-                        value={productQueries[idx] || ""}
-                        onChange={(e) =>
-                          handleProductInputChange(idx, e.target.value)
-                        }
-                        onFocus={() => {
-                          setShowProductSuggestions((prev) => {
-                            const updated = [...prev];
-                            updated[idx] = true;
-                            return updated;
-                          });
-                        }}
-                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:outline-none transition"
-                        placeholder="Type product name/code"
-                        autoComplete="off"
-                      />
-                    </div>
-                    {showProductSuggestions[idx] &&
-                      productQueries[idx] &&
-                      productSuggestions[idx].length > 0 && (
-                        <ul
-                          ref={(el) => {
-                            productSuggestionsRefs.current[idx] = el;
-                          }}
-                          className="absolute z-20 w-full max-h-48 overflow-y-auto bg-white border border-gray-200 rounded shadow-lg mt-1"
-                          style={{ top: "100%" }}
-                        >
-                          {productSuggestions[idx].map((p) => (
-                            <li
-                              key={p.id}
-                              className="px-3 py-2 hover:bg-primary/10 cursor-pointer transition"
-                              onClick={() =>
-                                handleProductSuggestionClick(idx, p)
-                              }
-                            >
-                              <span className="font-medium">{p.name}</span>
-                              {p.code && (
-                                <span className="ml-2 text-xs text-muted-foreground">
-                                  [{p.code}]
-                                </span>
-                              )}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                  </td>
-                  <td className="text-center px-3 py-2">
-                    <input
-                      type="number"
-                      min={1}
-                      value={item.quantity === 0 ? "" : item.quantity}
-                      onChange={(e) =>
-                        handleItemChange(
-                          idx,
-                          "quantity",
-                          Number(removeLeadingZeros(e.target.value))
-                        )
-                      }
-                      className="border rounded px-2 py-1 w-16 bg-background text-center"
-                      onFocus={(e) => {
-                        if (e.target.value === "0") e.target.value = "";
-                      }}
-                    />
-                  </td>
-                  <td className="text-center px-3 py-2">
-                    <input
-                      type="number"
-                      value={item.rate === 0 ? "" : item.rate}
-                      onChange={(e) =>
-                        handleItemChange(
-                          idx,
-                          "rate",
-                          Number(removeLeadingZeros(e.target.value))
-                        )
-                      }
-                      className="border rounded px-2 py-1 w-20 bg-background text-center"
-                      onFocus={(e) => {
-                        if (e.target.value === "0") e.target.value = "";
-                      }}
-                    />
-                  </td>
-                  <td className="text-center px-3 py-2">
-                    <input
-                      type="number"
-                      value={item.discount === 0 ? "" : item.discount}
-                      onChange={(e) =>
-                        handleItemChange(
-                          idx,
-                          "discount",
-                          Number(removeLeadingZeros(e.target.value))
-                        )
-                      }
-                      className="border rounded px-2 py-1 w-16 bg-background text-center"
-                      onFocus={(e) => {
-                        if (e.target.value === "0") e.target.value = "";
-                      }}
-                    />
-                  </td>
-                  <td className="text-center px-3 py-2">
-                    <input
-                      type="number"
-                      value={item.gst === 0 ? "" : item.gst}
-                      onChange={(e) =>
-                        handleItemChange(
-                          idx,
-                          "gst",
-                          Number(removeLeadingZeros(e.target.value))
-                        )
-                      }
-                      className="border rounded px-2 py-1 w-14 bg-background text-center"
-                      onFocus={(e) => {
-                        if (e.target.value === "0") e.target.value = "";
-                      }}
-                    />
-                  </td>
-                  <td className="text-right px-3 py-2">
-                    ₹{(item.amount + item.gstAmount).toFixed(2)}
-                  </td>
-                  <td className="px-3 py-2 text-center">
-                    {items.length > 1 && (
-                      <button
-                        className="text-destructive hover:bg-destructive/10 rounded-full p-1 transition"
-                        onClick={() => removeItem(idx)}
-                        title="Remove"
-                      >
-                        ✕
-                      </button>
-                    )}
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="min-w-[700px] w-full text-sm mb-2 border-separate border-spacing-y-2">
+              <thead>
+                <tr className="bg-muted">
+                  <th className="text-left px-3 py-2 font-semibold">Product</th>
+                  <th className="text-center px-3 py-2 font-semibold">Qty</th>
+                  <th className="text-center px-3 py-2 font-semibold">Rate</th>
+                  <th className="text-center px-3 py-2 font-semibold">
+                    Discount
+                  </th>
+                  <th className="text-center px-3 py-2 font-semibold">GST %</th>
+                  <th className="text-right px-3 py-2 font-semibold">Amount</th>
+                  <th></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {items.map((item, idx) => (
+                  <tr key={idx} className="align-middle bg-card rounded-lg">
+                    <td className="relative min-w-[220px] px-3 py-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-400">
+                          <svg
+                            width="18"
+                            height="18"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              d="M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm7-1-3.5-3.5"
+                            />
+                          </svg>
+                        </span>
+                        <input
+                          type="text"
+                          value={productQueries[idx] || ""}
+                          onChange={(e) =>
+                            handleProductInputChange(idx, e.target.value)
+                          }
+                          onFocus={() => {
+                            setShowProductSuggestions((prev) => {
+                              const updated = [...prev];
+                              updated[idx] = true;
+                              return updated;
+                            });
+                          }}
+                          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:outline-none transition"
+                          placeholder="Type product name/code"
+                          autoComplete="off"
+                        />
+                      </div>
+                      {showProductSuggestions[idx] &&
+                        productQueries[idx] &&
+                        productSuggestions[idx].length > 0 && (
+                          <ul
+                            ref={(el) => {
+                              productSuggestionsRefs.current[idx] = el;
+                            }}
+                            className="absolute z-20 w-full max-h-48 overflow-y-auto bg-white border border-gray-200 rounded shadow-lg mt-1"
+                            style={{ top: "100%" }}
+                          >
+                            {productSuggestions[idx].map((p) => (
+                              <li
+                                key={p.id}
+                                className="px-3 py-2 hover:bg-primary/10 cursor-pointer transition"
+                                onClick={() =>
+                                  handleProductSuggestionClick(idx, p)
+                                }
+                              >
+                                <span className="font-medium">{p.name}</span>
+                                {p.code && (
+                                  <span className="ml-2 text-xs text-muted-foreground">
+                                    [{p.code}]
+                                  </span>
+                                )}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                    </td>
+                    <td className="text-center px-3 py-2">
+                      <input
+                        type="number"
+                        min={1}
+                        value={item.quantity === 0 ? "" : item.quantity}
+                        onChange={(e) =>
+                          handleItemChange(
+                            idx,
+                            "quantity",
+                            Number(removeLeadingZeros(e.target.value))
+                          )
+                        }
+                        className="border rounded px-2 py-1 w-16 bg-background text-center"
+                        onFocus={(e) => {
+                          if (e.target.value === "0") e.target.value = "";
+                        }}
+                      />
+                    </td>
+                    <td className="text-center px-3 py-2">
+                      <input
+                        type="number"
+                        value={item.rate === 0 ? "" : item.rate}
+                        onChange={(e) =>
+                          handleItemChange(
+                            idx,
+                            "rate",
+                            Number(removeLeadingZeros(e.target.value))
+                          )
+                        }
+                        className="border rounded px-2 py-1 w-20 bg-background text-center"
+                        onFocus={(e) => {
+                          if (e.target.value === "0") e.target.value = "";
+                        }}
+                      />
+                    </td>
+                    <td className="text-center px-3 py-2">
+                      <input
+                        type="number"
+                        value={item.discount === 0 ? "" : item.discount}
+                        onChange={(e) =>
+                          handleItemChange(
+                            idx,
+                            "discount",
+                            Number(removeLeadingZeros(e.target.value))
+                          )
+                        }
+                        className="border rounded px-2 py-1 w-16 bg-background text-center"
+                        onFocus={(e) => {
+                          if (e.target.value === "0") e.target.value = "";
+                        }}
+                      />
+                    </td>
+                    <td className="text-center px-3 py-2">
+                      <input
+                        type="number"
+                        value={item.gst === 0 ? "" : item.gst}
+                        onChange={(e) =>
+                          handleItemChange(
+                            idx,
+                            "gst",
+                            Number(removeLeadingZeros(e.target.value))
+                          )
+                        }
+                        className="border rounded px-2 py-1 w-14 bg-background text-center"
+                        onFocus={(e) => {
+                          if (e.target.value === "0") e.target.value = "";
+                        }}
+                      />
+                    </td>
+                    <td className="text-right px-3 py-2">
+                      ₹{(item.amount + item.gstAmount).toFixed(2)}
+                    </td>
+                    <td className="px-3 py-2 text-center">
+                      {items.length > 1 && (
+                        <button
+                          className="text-destructive hover:bg-destructive/10 rounded-full p-1 transition"
+                          onClick={() => removeItem(idx)}
+                          title="Remove"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
           {items.length > 0 && items[0].productId && (
             <div className="mb-4">
               <button
@@ -1124,7 +1117,7 @@ export default function SalesPage() {
           </div>
         </div>
         {/* Actions */}
-        <div className="flex justify-end gap-3 pt-4 border-t">
+        <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t">
           <button
             className="bg-primary text-primary-foreground hover:bg-primary/90 px-6 py-2 rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
             onClick={handleSubmit}

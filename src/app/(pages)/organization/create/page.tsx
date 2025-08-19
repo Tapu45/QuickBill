@@ -73,10 +73,9 @@ export default function CreateOrganizationPage() {
     }
   };
 
-  return (
-   <div className="min-h-screen flex items-center justify-center bg-background p-2">
-  <div className="flex w-full max-w-3xl min-h-[500px] rounded-2xl overflow-hidden shadow-xl bg-card border border-border">
-    <div className="w-[45%] bg-primary flex flex-col justify-between p-8 relative overflow-hidden">
+ return (
+  <div className="flex min-h-screen w-full flex-col lg:flex-row items-center justify-center bg-background p-2">
+    <div className="w-full lg:w-[45%] flex flex-col justify-between bg-primary p-4 sm:p-6 lg:p-8 relative overflow-hidden rounded-t-2xl lg:rounded-l-2xl lg:rounded-tr-none text-xl min-h-[40vh] lg:min-h-screen">
       <div className="absolute inset-0 overflow-hidden">
         <motion.div
           className="absolute -top-14 -left-14 w-28 h-28 bg-primary-foreground/10 rounded-full"
@@ -113,17 +112,17 @@ export default function CreateOrganizationPage() {
           transition={{ duration: 0.6 }}
           className="mb-6"
         >
-          <div className="text-2xl font-bold mb-2 flex items-center gap-2 text-primary-foreground">
+          <div className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 flex items-center gap-2 text-primary-foreground">
             <motion.div
-              className="w-8 h-8 bg-primary-foreground/20 rounded-xl flex items-center justify-center backdrop-blur-sm"
+              className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-primary-foreground/20 rounded-xl flex items-center justify-center backdrop-blur-sm"
               whileHover={{ scale: 1.1, rotate: 5 }}
               transition={{ type: "spring", stiffness: 400, damping: 10 }}
             >
-              <Building2 className="w-5 h-5 text-primary-foreground" />
+              <Building2 className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 text-primary-foreground" />
             </motion.div>
             <span>QuickBill</span>
           </div>
-          <p className="text-primary-foreground/80 text-base">
+          <p className="text-primary-foreground/80 text-base sm:text-lg">
             Create your organization profile
           </p>
         </motion.div>
@@ -143,21 +142,21 @@ export default function CreateOrganizationPage() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6, delay: 0.3 }}
-        className="text-xs text-primary-foreground/60 relative z-10 mt-6"
+        className="text-xs sm:text-sm text-primary-foreground/60 relative z-10 mt-6"
       >
         <div className="flex items-center gap-2 mb-1">
-          <Shield className="w-4 h-4" />
+          <Shield className="w-4 h-4 sm:w-5 sm:h-5" />
           <span>Secured by 256-bit SSL encryption</span>
         </div>
-        <div>TERMS OF USE AND PRIVACY POLICY</div>
+        <div className="hidden sm:block">TERMS OF USE AND PRIVACY POLICY</div>
       </motion.div>
     </div>
-    <div className="w-[55%] flex flex-col items-center justify-center p-8 bg-card">
+    <div className="w-full lg:w-[55%] flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 bg-card rounded-b-2xl lg:rounded-r-2xl lg:rounded-bl-none min-h-[40vh] lg:min-h-screen">
       <motion.div
         initial={{ opacity: 0, x: 40 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.4 }}
-        className="w-full max-w-xs"
+        className="w-full max-w-xs sm:max-w-sm"
       >
         <motion.div
           className="flex flex-col items-center mb-6"
@@ -167,7 +166,7 @@ export default function CreateOrganizationPage() {
         >
           <label className="relative cursor-pointer group">
             <motion.div
-              className="w-16 h-16 rounded-full bg-muted flex items-center justify-center overflow-hidden border-4 border-card shadow-lg"
+              className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-full bg-muted flex items-center justify-center overflow-hidden border-4 border-card shadow-lg"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -178,7 +177,7 @@ export default function CreateOrganizationPage() {
                   className="object-cover w-full h-full"
                 />
               ) : (
-                <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                <ImageIcon className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-muted-foreground" />
               )}
             </motion.div>
             <input
@@ -192,22 +191,22 @@ export default function CreateOrganizationPage() {
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
             >
-              <Plus className="w-3 h-3" />
+              <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
             </motion.span>
           </label>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
             Upload organization logo
           </p>
         </motion.div>
         <div className="text-center mb-6">
-          <h2 className="text-xl font-bold text-foreground mb-1">
+          <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-1">
             Create Organization
           </h2>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm sm:text-base text-muted-foreground">
             Enter your organization details below
           </p>
         </div>
-        <form className="space-y-3" onSubmit={handleSubmit}>
+        <form className="space-y-3 sm:space-y-4" onSubmit={handleSubmit}>
           {error && <div className="text-red-500 text-xs">{error}</div>}
           <Input
             type="text"
@@ -215,7 +214,7 @@ export default function CreateOrganizationPage() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
-            className="h-10 bg-input border-2 border-border rounded-xl focus:border-primary focus:ring-0 transition-all duration-200"
+            className="h-10 sm:h-11 lg:h-12 text-sm sm:text-base bg-input border-2 border-border rounded-xl focus:border-primary focus:ring-0 transition-all duration-200"
           />
           <Input
             type="email"
@@ -223,35 +222,35 @@ export default function CreateOrganizationPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="h-10 bg-input border-2 border-border rounded-xl focus:border-primary focus:ring-0 transition-all duration-200"
+            className="h-10 sm:h-11 lg:h-12 text-sm sm:text-base bg-input border-2 border-border rounded-xl focus:border-primary focus:ring-0 transition-all duration-200"
           />
           <Input
             type="text"
             placeholder="Phone"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            className="h-10 bg-input border-2 border-border rounded-xl focus:border-primary focus:ring-0 transition-all duration-200"
+            className="h-10 sm:h-11 lg:h-12 text-sm sm:text-base bg-input border-2 border-border rounded-xl focus:border-primary focus:ring-0 transition-all duration-200"
           />
           <Input
             type="text"
             placeholder="Address"
             value={address}
             onChange={(e) => setAddress(e.target.value)}
-            className="h-10 bg-input border-2 border-border rounded-xl focus:border-primary focus:ring-0 transition-all duration-200"
+            className="h-10 sm:h-11 lg:h-12 text-sm sm:text-base bg-input border-2 border-border rounded-xl focus:border-primary focus:ring-0 transition-all duration-200"
           />
           <Input
             type="text"
             placeholder="GSTIN"
             value={gstin}
             onChange={(e) => setGstin(e.target.value)}
-            className="h-10 bg-input border-2 border-border rounded-xl focus:border-primary focus:ring-0 transition-all duration-200"
+            className="h-10 sm:h-11 lg:h-12 text-sm sm:text-base bg-input border-2 border-border rounded-xl focus:border-primary focus:ring-0 transition-all duration-200"
           />
           <Input
             type="text"
             placeholder="State Code"
             value={stateCode}
             onChange={(e) => setStateCode(e.target.value)}
-            className="h-10 bg-input border-2 border-border rounded-xl focus:border-primary focus:ring-0 transition-all duration-200"
+            className="h-10 sm:h-11 lg:h-12 text-sm sm:text-base bg-input border-2 border-border rounded-xl focus:border-primary focus:ring-0 transition-all duration-200"
           />
           <motion.div
             whileHover={{ scale: 1.02 }}
@@ -260,7 +259,7 @@ export default function CreateOrganizationPage() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full h-10 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 mt-1"
+              className="w-full h-10 sm:h-11 lg:h-12 text-sm sm:text-base bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 mt-1"
             >
               {loading ? (
                 <motion.div
@@ -270,12 +269,12 @@ export default function CreateOrganizationPage() {
                     repeat: Number.POSITIVE_INFINITY,
                     ease: "linear",
                   }}
-                  className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full"
+                  className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-primary-foreground border-t-transparent rounded-full"
                 />
               ) : (
                 <>
-                  <ArrowRight className="w-4 h-4 mr-2" />
-                  Create Organization
+                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                   Create Organization
                 </>
               )}
             </Button>
@@ -284,6 +283,5 @@ export default function CreateOrganizationPage() {
       </motion.div>
     </div>
   </div>
-</div>
-  );
+)
 }
