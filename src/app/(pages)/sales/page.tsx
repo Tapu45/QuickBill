@@ -762,9 +762,9 @@ export default function SalesPage() {
                           autoComplete="off"
                         />
                       </div>
-                      {showProductSuggestions[idx] &&
-                        productQueries[idx] &&
-                        productSuggestions[idx].length > 0 && (
+                     {showProductSuggestions[idx] &&
+  productQueries[idx] &&
+  (productSuggestions[idx] ?? []).length > 0 && (
                           <ul
                             ref={(el) => {
                               productSuggestionsRefs.current[idx] = el;
