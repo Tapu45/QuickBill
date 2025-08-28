@@ -582,13 +582,26 @@ export default function SalesPage() {
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-muted-foreground">
-                  Phone
+                  Phone *
                 </label>
                 <input
                   type="text"
                   value={newCustomer.phone}
                   onChange={(e) =>
                     handleNewCustomerInput("phone", e.target.value)
+                  }
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                />
+              </div>
+               <div className="space-y-2">
+                <label className="text-sm font-medium text-muted-foreground">
+                  Address *
+                </label>
+                <input
+                  type="text"
+                  value={newCustomer.address}
+                  onChange={(e) =>
+                    handleNewCustomerInput("address", e.target.value)
                   }
                   className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 />
@@ -606,6 +619,7 @@ export default function SalesPage() {
                   className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 />
               </div>
+             
               <div className="space-y-2">
                 <label className="text-sm font-medium text-muted-foreground">
                   GSTIN
@@ -615,19 +629,6 @@ export default function SalesPage() {
                   value={newCustomer.gstin}
                   onChange={(e) =>
                     handleNewCustomerInput("gstin", e.target.value)
-                  }
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-muted-foreground">
-                  Address
-                </label>
-                <input
-                  type="text"
-                  value={newCustomer.address}
-                  onChange={(e) =>
-                    handleNewCustomerInput("address", e.target.value)
                   }
                   className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 />
@@ -699,7 +700,10 @@ export default function SalesPage() {
 
           {/* Product Entry Section */}
           <div className="overflow-x-auto">
-            <table className="min-w-[700px] w-full text-sm mb-2 border-separate border-spacing-y-2">
+            <table
+              className="min-w-[700px] w-full text-sm mb-12 border-separate border-spacing-y-2"
+              style={{ overflow: "visible" }} // <-- Add this
+            >
               <thead>
                 <tr className="bg-muted">
                   <th className="text-left px-3 py-2 font-semibold">Product</th>
@@ -715,7 +719,15 @@ export default function SalesPage() {
               </thead>
               <tbody>
                 {items.map((item, idx) => (
-                  <tr key={idx} className="align-middle bg-card rounded-lg">
+                  <tr
+                    key={idx}
+                    className="align-middle bg-card rounded-lg"
+                    style={{
+                      position: "relative",
+                      overflow: "visible",
+                      zIndex: 10,
+                    }} // <-- Add this
+                  >
                     <td className="relative min-w-[220px] px-3 py-2">
                       <div className="flex items-center gap-2">
                         <span className="text-gray-400">

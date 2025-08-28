@@ -58,6 +58,11 @@ const sidebarLinks = [
         icon: <BarChart3 className="h-5 w-5" />,
         href: "/suppliers",
       },
+      {
+        title: "Warehouse",
+        icon: <Building2 className="h-5 w-5" />,
+        href: "/Inventory-management/warehouses",
+      }
     ],
   },
     {

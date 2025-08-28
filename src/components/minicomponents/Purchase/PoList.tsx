@@ -13,6 +13,7 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
   onRefresh,
 }) => {
   const [markingId, setMarkingId] = useState<string | null>(null);
+  const [purchaseOrdersList, setPurchaseOrdersList] = useState(purchaseOrders);
 
   const handleMarkReceived = async (
     id: string,
@@ -30,9 +31,15 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
           purchaseId: id,
           organizationId,
           storeId,
-          items, // send items with receivedQuantity, warehouseId, etc.
+          items,
         }),
       });
+
+      // Update local state
+      setPurchaseOrdersList((prev) =>
+        prev.map((po) => (po.id === id ? { ...po, status: "RECEIVED" } : po))
+      );
+
       if (onRefresh) onRefresh();
     } catch (err) {
       // error handling
@@ -76,7 +83,7 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {purchaseOrders.map((po) => (
+              {purchaseOrdersList.map((po) => (
                 <tr key={po.id} className="hover:bg-muted/50">
                   <td className="px-4 py-3 text-sm">{po.invoiceNumber}</td>
                   <td className="px-4 py-3 text-sm">{po.supplierId}</td>
